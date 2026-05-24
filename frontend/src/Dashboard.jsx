@@ -487,27 +487,19 @@ borderRadius:"10px"
 </div>
 
 
-<hr/>
-
-
 <PredictionEngine
 
-balance=
-{balance}
+balance={balance}
 
-remainingLoan=
-{remainingLoan}
+remainingLoan={remainingLoan}
 
-totalIncome=
-{totalIncome}
+totalIncome={totalIncome}
 
-confidence=
-{confidence}
+confidence={confidence}
+
+records={records}
 
 />
-
-
-<hr/>
 
 
 <ReportingDashboard
