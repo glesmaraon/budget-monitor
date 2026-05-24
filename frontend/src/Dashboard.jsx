@@ -1,426 +1,161 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 
-import IncomeTracker from "./components/IncomeTracker";
-import ExpenseTracker from "./components/ExpenseTracker";
-import LoanTracker from "./components/LoanTracker";
-import PredictionEngine from "./components/PredictionEngine";
-import ReportingDashboard from "./components/ReportingDashboard";
+export default function ReportingDashboard({
 
-export default function Dashboard() {
+records=[],
+totalIncome,
+totalExpenses,
+balance
 
-  // Income
-  const [incomeType, setIncomeType] =
-  useState("Salary");
+}){
 
-  const [incomeAmount, setIncomeAmount] =
-  useState("");
+const exportCSV=()=>{
 
-  const [incomeRecords, setIncomeRecords] =
-  useState([]);
+if(records.length===0){
 
+alert(
+"No records available"
+);
 
-  // Expenses
+return;
 
-  const [category,setCategory] =
-  useState("Transportation");
+}
 
-  const [expense,setExpense] =
-  useState("");
+const headers=[
+"Date",
+"Category",
+"Expense",
+"Description"
+];
 
-  const [description,setDescription] =
-  useState("");
+const rows=
 
-  const [date,setDate] =
-  useState("");
+records.map(
 
-  const [records,setRecords] =
-  useState([]);
+r=>
 
+[
+r.date,
+r.category,
+r.expense,
+r.description
 
-  // Loan
+].join(",")
 
-  const [loanTotal,setLoanTotal] =
-  useState("");
+);
 
-  const [loanPaid,setLoanPaid] =
-  useState("");
+const csv=
 
+[
+headers.join(","),
+...rows
 
-  // Savings
+].join("\n");
 
-  const [savingGoal,setSavingGoal] =
-  useState("");
 
+const blob=
 
+new Blob(
 
-  useEffect(()=>{
+[csv],
 
-    const savedIncome =
+{
 
-    localStorage.getItem(
-      "income_records"
-    );
+type:
+"text/csv;charset=utf-8;"
 
-    const savedExpenses =
+}
 
-    localStorage.getItem(
-      "finance_records"
-    );
+);
 
-    if(savedIncome){
 
-      setIncomeRecords(
-        JSON.parse(
-          savedIncome
-        )
-      )
+const url=
 
-    }
+URL.createObjectURL(
+blob
+);
 
-    if(savedExpenses){
 
-      setRecords(
-        JSON.parse(
-          savedExpenses
-        )
-      )
+const link=
+document.createElement(
+"a"
+);
 
-    }
+link.href=url;
 
-  },[]);
+link.download=
+"Financial_Report.csv";
 
+document.body.appendChild(
+link
+);
 
+link.click();
 
-  const saveIncome=()=>{
+document.body.removeChild(
+link);
 
-    if(!incomeAmount)
-    return;
+};
 
 
-    const item={
+const mae=
 
-      type:
-      incomeType,
+records.length===0
 
-      amount:
-      Number(
-        incomeAmount
-      ),
+?0
 
-      date:
-      new Date()
-      .toLocaleDateString()
+:
 
-    }
+Math.abs(
+balance
+)*0.1;
 
 
-    const updated=[
+const rmse=
 
-      ...incomeRecords,
-      item
+Math.sqrt(
+mae
+).toFixed(2);
 
-    ]
 
+const completeness=
 
-    setIncomeRecords(
-      updated
-    )
+Math.min(
 
+records.length*10,
 
-    localStorage.setItem(
+100
 
-      "income_records",
-
-      JSON.stringify(
-        updated
-      )
-
-    )
-
-
-    setIncomeAmount("")
-
-  }
-
-
-
-  const saveExpense=()=>{
-
-    if(
-      !expense||
-      !date
-    )
-    return;
-
-
-    const item={
-
-      date,
-
-      category,
-
-      expense:
-      Number(
-        expense
-      ),
-
-      description
-
-    }
-
-
-    const updated=[
-
-      ...records,
-      item
-
-    ]
-
-
-    setRecords(
-      updated
-    )
-
-
-    localStorage.setItem(
-
-      "finance_records",
-
-      JSON.stringify(
-        updated
-      )
-
-    )
-
-
-    setExpense("")
-    setDescription("")
-
-  }
-
-
-
-const totalIncome=
-
-incomeRecords.reduce(
-
-(sum,item)=>
-
-sum+
-Number(
-item.amount||0
-),
-
-0
-
-)
-
-
-
-const totalExpenses=
-
-records.reduce(
-
-(sum,item)=>
-
-sum+
-Number(
-item.expense||0
-),
-
-0
-
-)
-
-
-const remainingLoan=
-
-Math.max(
-
-Number(
-loanTotal||0
-)
-
--
-
-Number(
-loanPaid||0
-),
-
-0
-
-)
-
-
-const balance=
-
-totalIncome
--
-totalExpenses
--
-remainingLoan
-
-
-const confidence=
-
-records.length>=10
-
-?95
-
-:records.length>=5
-
-?88
-
-:75
+);
 
 
 
 return(
 
-<div
-style={{
-maxWidth:"1000px",
-margin:"auto",
-padding:"30px",
-fontFamily:"Arial"
-}}
->
-
-<h1>
-💰 AI Financial Companion
-</h1>
-
-<hr/>
-
-
-<IncomeTracker
-
-incomeType=
-{incomeType}
-
-setIncomeType=
-{setIncomeType}
-
-incomeAmount=
-{incomeAmount}
-
-setIncomeAmount=
-{setIncomeAmount}
-
-saveIncome=
-{saveIncome}
-
-/>
-
-<hr/>
-
-
-<ExpenseTracker
-
-category=
-{category}
-
-setCategory=
-{setCategory}
-
-expense=
-{expense}
-
-setExpense=
-{setExpense}
-
-description=
-{description}
-
-setDescription=
-{setDescription}
-
-date=
-{date}
-
-setDate=
-{setDate}
-
-saveExpense=
-{saveExpense}
-
-/>
-
-<hr/>
-
-
-<LoanTracker
-
-loanTotal=
-{loanTotal}
-
-setLoanTotal=
-{setLoanTotal}
-
-loanPaid=
-{loanPaid}
-
-setLoanPaid=
-{setLoanPaid}
-
-remainingLoan=
-{remainingLoan}
-
-/>
-
-<hr/>
-
+<div>
 
 <h2>
-🎯 Savings Goal
+
+📄 Reporting & Analytics
+
 </h2>
 
-<input
-
-type="number"
-
-placeholder=
-"Savings Goal (£)"
-
-value=
-{savingGoal}
-
-onChange=
-{(e)=>
-
-setSavingGoal(
-e.target.value
-)
-
-}
-
-/>
-
-
-<hr/>
-
-
-<h2>
-📊 Financial Dashboard
-</h2>
 
 <div
 style={{
-
 display:"grid",
-
 gridTemplateColumns:
 "repeat(auto-fit,minmax(220px,1fr))",
-
-gap:"15px"
-
+gap:"15px",
+marginBottom:"20px"
 }}
 >
 
 <div style={{
-padding:"15px",
-border:"1px solid #ddd",
-borderRadius:"10px"
+padding:"20px",
+borderRadius:"15px",
+boxShadow:
+"0 2px 8px rgba(0,0,0,.1)"
 }}>
 
 <h3>
@@ -434,10 +169,12 @@ borderRadius:"10px"
 </div>
 
 
+
 <div style={{
-padding:"15px",
-border:"1px solid #ddd",
-borderRadius:"10px"
+padding:"20px",
+borderRadius:"15px",
+boxShadow:
+"0 2px 8px rgba(0,0,0,.1)"
 }}>
 
 <h3>
@@ -452,30 +189,14 @@ borderRadius:"10px"
 
 
 <div style={{
-padding:"15px",
-border:"1px solid #ddd",
-borderRadius:"10px"
+padding:"20px",
+borderRadius:"15px",
+boxShadow:
+"0 2px 8px rgba(0,0,0,.1)"
 }}>
 
 <h3>
-🏦 Loan
-</h3>
-
-<h1>
-£{remainingLoan}
-</h1>
-
-</div>
-
-
-<div style={{
-padding:"15px",
-border:"1px solid #ddd",
-borderRadius:"10px"
-}}>
-
-<h3>
-💰 Balance
+💰 Cashflow
 </h3>
 
 <h1>
@@ -487,37 +208,133 @@ borderRadius:"10px"
 </div>
 
 
-<PredictionEngine
 
-balance={balance}
+<h3>
 
-remainingLoan={remainingLoan}
+📈 Validation Metrics
 
-totalIncome={totalIncome}
+</h3>
 
-confidence={confidence}
+<p>
+MAE:
+{mae.toFixed(2)}
+</p>
 
-records={records}
+<p>
+RMSE:
+{rmse}
+</p>
 
-/>
+<p>
+Data Completeness:
+{completeness}%
+</p>
 
 
-<ReportingDashboard
+<button
 
-records=
-{records}
+style={{
 
-totalIncome=
-{totalIncome}
+padding:"12px",
 
-totalExpenses=
-{totalExpenses}
+border:"none",
 
-balance=
-{balance}
+borderRadius:"10px",
 
-/>
+cursor:"pointer"
 
+}}
+
+onClick={exportCSV}
+
+>
+
+⬇ Download Spreadsheet
+
+</button>
+
+
+<br/><br/>
+
+
+<table
+style={{
+width:"100%",
+borderCollapse:"collapse"
+}}
+border="1"
+>
+
+<thead>
+
+<tr>
+
+<th>Date</th>
+
+<th>Category</th>
+
+<th>Expense</th>
+
+<th>Description</th>
+
+</tr>
+
+</thead>
+
+
+<tbody>
+
+{
+
+records.length===0
+
+?
+
+<tr>
+
+<td
+colSpan="4"
+>
+
+No records available
+
+</td>
+
+</tr>
+
+:
+
+records.map(
+
+(item,index)=>(
+
+<tr
+key={index}
+>
+
+<td>{item.date}</td>
+
+<td>{item.category}</td>
+
+<td>
+£{item.expense}
+</td>
+
+<td>
+{item.description}
+</td>
+
+</tr>
+
+)
+
+)
+
+}
+
+</tbody>
+
+</table>
 
 </div>
 
