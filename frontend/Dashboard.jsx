@@ -1,233 +1,160 @@
-import { useState } from 'react'
+import React, { useState } from "react";
+
+export default function Dashboard() {
+  const [income, setIncome] = useState(0);
+  const [expense, setExpense] = useState(0);
+  const [category, setCategory] = useState("Food");
+
+  const [loanTotal, setLoanTotal] = useState(0);
+  const [loanPaid, setLoanPaid] = useState(0);
+
+  const [savingsGoal, setSavingsGoal] = useState(0);
+
+  const remainingLoan =
+    Number(loanTotal || 0) - Number(loanPaid || 0);
+
+  const balance =
+    Number(income || 0) -
+    Number(expense || 0) -
+    Math.max(remainingLoan,0);
+
+  let projection = "";
+  let risk = "";
+
+  if(balance < 0){
+    projection="Projected deficit next month";
+    risk="🔴 High";
+  }
+  else if(balance < 500){
+    projection="Moderate financial pressure";
+    risk="🟠 Medium";
+  }
+  else{
+    projection="Stable projected balance";
+    risk="🟢 Low";
+  }
+
+  return (
+    <div style={{
+      maxWidth:"900px",
+      margin:"auto",
+      padding:"30px",
+      fontFamily:"Arial"
+    }}>
+
+      <h1>💰 AI Financial Companion V3</h1>
+
+      <hr />
+
+      <h2>Money Received</h2>
+
+      <input
+        type="number"
+        placeholder="Income (£)"
+        value={income}
+        onChange={(e)=>setIncome(e.target.value)}
+      />
+
+      <hr />
+
+      <h2>Expense Entry</h2>
+
+      <select
+        value={category}
+        onChange={(e)=>setCategory(e.target.value)}
+      >
+        <option>Food</option>
+        <option>Transportation</option>
+        <option>Bills</option>
+        <option>Travel</option>
+        <option>Shopping</option>
+        <option>Conference</option>
+        <option>Emergency</option>
+      </select>
+
+      <br/><br/>
+
+      <input
+        type="number"
+        placeholder="Expense amount (£)"
+        value={expense}
+        onChange={(e)=>setExpense(e.target.value)}
+      />
+
+      <hr/>
+
+      <h2>Loan Tracking</h2>
+
+      <input
+        type="number"
+        placeholder="Loan total (£)"
+        value={loanTotal}
+        onChange={(e)=>setLoanTotal(e.target.value)}
+      />
+
+      <br/><br/>
+
+      <input
+        type="number"
+        placeholder="Loan paid (£)"
+        value={loanPaid}
+        onChange={(e)=>setLoanPaid(e.target.value)}
+      />
 
-export default function Dashboard(){
+      <p>
+        Status:
+        {remainingLoan<=0
+        ? " CLOSED ✅"
+        : " ACTIVE 🔴"}
+      </p>
 
-const [income,setIncome]=useState("")
-const [category,setCategory]=useState("Food")
-const [expense,setExpense]=useState("")
-const [loan,setLoan]=useState("")
-const [savingGoal,setSavingGoal]=useState("")
-const [paidLoan,setPaidLoan]=useState("")
+      <hr/>
 
-const totalExpenses=Number(expense||0)
-const remainingLoan=Math.max(
-Number(loan||0)-Number(paidLoan||0),
-0
-)
+      <h2>Savings Goal</h2>
 
-const balance=
-Number(income||0)
--totalExpenses
--remainingLoan
+      <input
+        type="number"
+        placeholder="Savings goal (£)"
+        value={savingsGoal}
+        onChange={(e)=>setSavingsGoal(e.target.value)}
+      />
 
-let prediction=""
-let risk=""
+      <hr/>
 
-if(balance<0){
-prediction="High risk next month"
-risk="🔴 High"
-}
-else if(balance<500){
-prediction="Moderate spending pressure"
-risk="🟠 Medium"
-}
-else{
-prediction="Financial status stable"
-risk="🟢 Low"
-}
+      <h2>Dashboard Summary</h2>
 
-return(
+      <p>Category: {category}</p>
 
-<div
-style={{
-padding:"30px",
-fontFamily:"Arial",
-maxWidth:"900px",
-margin:"auto"
-}}
->
+      <p>
+        Remaining Loan:
+        £{Math.max(remainingLoan,0)}
+      </p>
 
-<h1>
-💰 AI Financial Companion
-</h1>
+      <p>
+        Current Balance:
+        £{balance}
+      </p>
 
-<hr/>
+      <p>
+        Savings Goal:
+        £{savingsGoal}
+      </p>
 
-<h2>Money Received</h2>
+      <hr/>
 
-<input
-type="number"
-placeholder="Salary / income (£)"
-value={income}
-onChange={(e)=>setIncome(e.target.value)}
-/>
+      <h2>🤖 Prediction Engine</h2>
 
-<hr/>
+      <p>30-day Projection: {projection}</p>
 
-<h2>Expense Entry</h2>
+      <p>Risk: {risk}</p>
 
-<select
-value={category}
-onChange={(e)=>setCategory(e.target.value)}
->
+      <p>
+        Recommendation:
+        {balance<500
+          ? "Reduce transportation and travel expenses"
+          : "Current spending looks manageable"}
+      </p>
 
-<option>Food</option>
-
-<option>Transportation</option>
-
-<option>Bills</option>
-
-<option>Shopping</option>
-
-<option>Conference</option>
-
-<option>Emergency</option>
-
-<option>Travel</option>
-
-</select>
-
-<br/><br/>
-
-<input
-type="number"
-placeholder="Expense amount (£)"
-value={expense}
-onChange={(e)=>setExpense(e.target.value)}
-/>
-
-<hr/>
-
-<h2>Loan Tracking</h2>
-
-<input
-type="number"
-placeholder="Total loan (£)"
-value={loan}
-onChange={(e)=>setLoan(e.target.value)}
-/>
-
-<br/><br/>
-
-<input
-type="number"
-placeholder="Amount already paid (£)"
-value={paidLoan}
-onChange={(e)=>setPaidLoan(e.target.value)}
-/>
-
-<h3>
-
-Status:
-
-{
-remainingLoan===0
-?
-
-" CLOSED ✅"
-
-:
-
-" ACTIVE 🔴"
-}
-
-</h3>
-
-<hr/>
-
-<h2>Savings Goal</h2>
-
-<input
-type="number"
-placeholder="Savings target (£)"
-value={savingGoal}
-onChange={(e)=>setSavingGoal(e.target.value)}
-/>
-
-<hr/>
-
-<h1>
-
-Dashboard Summary
-
-</h1>
-
-<p>
-
-💵 Current Balance:
-
-£{balance}
-
-</p>
-
-<p>
-
-📌 Category:
-
-{category}
-
-</p>
-
-<p>
-
-💳 Remaining Loan:
-
-£{remainingLoan}
-
-</p>
-
-<p>
-
-🎯 Savings Goal:
-
-£{savingGoal||0}
-
-</p>
-
-<hr/>
-
-<h1>
-
-🤖 Prediction Engine
-
-</h1>
-
-<p>
-
-30-day Projection:
-
-{prediction}
-
-</p>
-
-<p>
-
-Risk:
-
-{risk}
-
-</p>
-
-<p>
-
-Recommendation:
-
-{
-balance<500
-
-?
-
-"Reduce transportation/travel spending this month"
-
-:
-
-"Current spending looks manageable"
-}
-
-</p>
-
-</div>
-
-)
-
+    </div>
+  );
 }
