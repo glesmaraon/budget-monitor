@@ -14,8 +14,17 @@ return(
 <div>
 
 <h2>
-📄 Financial Report
+📄 Reporting
 </h2>
+
+<div
+style={{
+padding:"15px",
+border:"1px solid #ddd",
+borderRadius:"10px",
+marginBottom:"20px"
+}}
+>
 
 <p>
 Total Income:
@@ -32,9 +41,17 @@ Net Cashflow:
 £{balance}
 </p>
 
-<br/>
+</div>
 
-<table border="1">
+<table
+style={{
+
+width:"100%",
+borderCollapse:"collapse"
+
+}}
+border="1"
+>
 
 <thead>
 
@@ -64,9 +81,13 @@ records.length===0
 
 <td
 colSpan="4"
+style={{
+padding:"15px",
+textAlign:"center"
+}}
 >
 
-No financial records yet
+No records available
 
 </td>
 
