@@ -1,27 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React,{useEffect,useState} from "react";
 
-import ReportingDashboard from "./components/ReportingDashboard";
+export default function Dashboard(){
 
-export default function Dashboard() {
+const [records,setRecords]=useState([]);
+const [income,setIncome]=useState("");
+const [loan,setLoan]=useState("");
+const [savingGoal,setSavingGoal]=useState("");
 
-const [incomeRecords,setIncomeRecords]=
-useState([]);
-
-const [records,setRecords]=
-useState([]);
-
-const [loanTotal,setLoanTotal]=
-useState("");
-
-const [loanPaid,setLoanPaid]=
-useState("");
-
-const [savingGoal,setSavingGoal]=
-useState("");
-
-const [expense,setExpense]=
-useState("");
-
+const [expense,setExpense]=useState("");
 const [category,setCategory]=
 useState("Transportation");
 
@@ -29,33 +15,18 @@ const [description,setDescription]=
 useState("");
 
 
-
 useEffect(()=>{
 
-const savedIncome=
-
-localStorage.getItem(
-"income_records"
-);
-
-const savedExpenses=
+const saved=
 
 localStorage.getItem(
 "finance_records"
 );
 
-if(savedIncome){
-
-setIncomeRecords(
-JSON.parse(savedIncome)
-);
-
-}
-
-if(savedExpenses){
+if(saved){
 
 setRecords(
-JSON.parse(savedExpenses)
+JSON.parse(saved)
 );
 
 }
@@ -64,75 +35,43 @@ JSON.parse(savedExpenses)
 
 
 
-const saveExpense=()=>{
+const addExpense=()=>{
 
-if(!expense)
-return;
-
+if(!expense)return;
 
 const item={
 
 id:Date.now(),
 
 date:
-
 new Date()
-.toISOString()
-.split("T")[0],
+.toLocaleDateString(),
 
 category,
 
-expense:Number(
-expense
-),
+expense:
+Number(expense),
 
 description
 
 };
 
-
 const updated=[
-
 ...records,
 item
-
 ];
 
-setRecords(
-updated
-);
+setRecords(updated);
 
 localStorage.setItem(
-
 "finance_records",
-
-JSON.stringify(
-updated)
-
+JSON.stringify(updated)
 );
 
 setExpense("");
-
 setDescription("");
 
 };
-
-
-
-const totalIncome=
-
-incomeRecords.reduce(
-
-(sum,r)=>
-
-sum+
-Number(
-r.amount||0
-),
-
-0
-
-);
 
 
 
@@ -140,86 +79,72 @@ const totalExpenses=
 
 records.reduce(
 
-(sum,r)=>
+(sum,item)=>
 
 sum+
-Number(
-r.expense||0
-),
+item.expense,
 
 0
 
 );
-
-
-
-const remainingLoan=
-
-Math.max(
-
-Number(
-loanTotal||0
-)
-
--
-
-Number(
-loanPaid||0
-),
-
-0
-
-);
-
 
 
 const balance=
 
-totalIncome
+Number(income||0)
 -
 totalExpenses
 -
-remainingLoan;
+Number(loan||0);
 
 
 
-const forecast=()=>{
+const recommendation=()=>{
 
 if(balance<0){
 
 return
-
-"⚠ Overspending detected. Reduce optional expenses.";
+"Reduce optional spending and prioritize essential expenses.";
 
 }
 
 if(
-
-remainingLoan>
-
-totalIncome*.5
-
+Number(loan)>
+Number(income)*0.5
 ){
 
 return
-
-"📉 Loan burden affecting savings growth.";
-
-}
-
-if(records.length>5){
-
-return
-
-"📈 Stable spending trend detected.";
+"Loan repayment is impacting future savings.";
 
 }
 
-return
+if(
+records.length>5
+){
 
-"Need more daily records for stronger forecasting.";
+return
+"Spending trend stable. Continue monitoring daily usage.";
+
+}
+
+return
+"Add more daily records for stronger forecasting.";
 
 };
+
+
+
+const confidence=
+
+records.length>10
+
+?95
+
+:records.length>5
+
+?88
+
+:70;
 
 
 
@@ -227,17 +152,21 @@ return(
 
 <div
 style={{
+fontFamily:"Arial",
+background:"#F5F7FA",
+minHeight:"100vh",
+padding:"30px"
+}}
+>
 
-maxWidth:"1200px",
 
-margin:"auto",
-
-padding:"25px",
-
-background:"#f5f7fb",
-
-minHeight:"100vh"
-
+<div
+style={{
+background:"#111827",
+padding:"30px",
+borderRadius:"20px",
+color:"white",
+marginBottom:"25px"
 }}
 >
 
@@ -247,6 +176,15 @@ minHeight:"100vh"
 
 </h1>
 
+<p>
+
+Personal finance tracker with forecasting and reporting
+
+</p>
+
+</div>
+
+
 
 <div
 style={{
@@ -254,11 +192,9 @@ style={{
 display:"grid",
 
 gridTemplateColumns:
-"repeat(auto-fit,minmax(230px,1fr))",
+"repeat(auto-fit,minmax(220px,1fr))",
 
-gap:"20px",
-
-marginTop:"20px"
+gap:"20px"
 
 }}
 >
@@ -268,61 +204,41 @@ marginTop:"20px"
 
 {
 
-title:"💼 Income",
+title:"Income",
 
-value:`£${totalIncome}`,
+icon:"💼",
 
-sub:
-
-`${incomeRecords.length} sources`
+value:`£${income||0}`
 
 },
 
 {
 
-title:"💸 Daily Spend",
+title:"Expenses",
 
-value:`£${totalExpenses}`,
+icon:"💸",
 
-sub:
-
-`${records.length} transactions`
+value:`£${totalExpenses}`
 
 },
 
 {
 
-title:"🏦 Loan",
+title:"Loan",
 
-value:`£${remainingLoan}`,
+icon:"🏦",
 
-sub:"Remaining"
+value:`£${loan||0}`
 
 },
 
 {
 
-title:"🎯 Goal",
+title:"Balance",
 
-value:
+icon:"💰",
 
-savingGoal
-
-?
-
-`${Math.max(
-
-((balance/savingGoal)*100)
-
-.toFixed(0),
-
-0
-
-)}%`
-
-:"0%",
-
-sub:"Progress"
+value:`£${balance}`
 
 }
 
@@ -336,18 +252,20 @@ style={{
 
 background:"white",
 
-padding:"20px",
+padding:"25px",
 
-borderRadius:"20px",
+borderRadius:"18px",
 
 boxShadow:
-"0 3px 12px rgba(0,0,0,.08)"
+"0 4px 12px rgba(0,0,0,.08)"
 
 }}
 >
 
 <h3>
 
+{card.icon}
+{" "}
 {card.title}
 
 </h3>
@@ -357,12 +275,6 @@ boxShadow:
 {card.value}
 
 </h1>
-
-<p>
-
-{card.sub}
-
-</p>
 
 </div>
 
@@ -376,20 +288,19 @@ boxShadow:
 
 
 
-<br/>
-
-
 <div
 style={{
+
+marginTop:"25px",
 
 background:"white",
 
 padding:"25px",
 
-borderRadius:"20px",
+borderRadius:"18px",
 
 boxShadow:
-"0 3px 12px rgba(0,0,0,.08)"
+"0 4px 12px rgba(0,0,0,.08)"
 
 }}
 >
@@ -401,42 +312,94 @@ boxShadow:
 </h2>
 
 
-<select
+<input
 
-value={category}
+type="number"
+
+placeholder=
+"Income (£)"
+
+value={income}
 
 onChange={(e)=>
+setIncome(
+e.target.value
+)}
 
+style={{
+margin:"5px"
+}}
+
+/>
+
+
+<input
+
+type="number"
+
+placeholder=
+"Loan (£)"
+
+value={loan}
+
+onChange={(e)=>
+setLoan(
+e.target.value
+)}
+
+style={{
+margin:"5px"
+}}
+
+/>
+
+
+<input
+
+type="number"
+
+placeholder=
+"Savings Goal (£)"
+
+value={savingGoal}
+
+onChange={(e)=>
+setSavingGoal(
+e.target.value
+)}
+
+style={{
+margin:"5px"
+}}
+
+/>
+
+
+<br/><br/>
+
+
+<select
+value={category}
+onChange={(e)=>
 setCategory(
 e.target.value
-)
-
-}
-
+)}
 >
 
 <option>
-
 Transportation
-
 </option>
 
 <option>
-
 Food
-
 </option>
 
 <option>
-
 Bills
-
 </option>
 
 <option>
-
 Shopping
-
 </option>
 
 </select>
@@ -446,17 +409,15 @@ Shopping
 
 type="number"
 
-placeholder="Expense (£)"
+placeholder=
+"Expense (£)"
 
 value={expense}
 
 onChange={(e)=>
-
 setExpense(
 e.target.value
-)
-
-}
+)}
 
 />
 
@@ -469,18 +430,18 @@ placeholder=
 value={description}
 
 onChange={(e)=>
-
 setDescription(
 e.target.value
-)
-
-}
+)}
 
 />
 
 
 <button
-onClick={saveExpense}
+onClick={addExpense}
+style={{
+marginLeft:"10px"
+}}
 >
 
 Add Expense
@@ -490,20 +451,20 @@ Add Expense
 </div>
 
 
-<br/>
-
 
 <div
 style={{
+
+marginTop:"25px",
 
 background:"white",
 
 padding:"25px",
 
-borderRadius:"20px",
+borderRadius:"18px",
 
 boxShadow:
-"0 3px 12px rgba(0,0,0,.08)"
+"0 4px 12px rgba(0,0,0,.08)"
 
 }}
 >
@@ -516,95 +477,127 @@ boxShadow:
 
 <p>
 
-{forecast()}
+{recommendation()}
 
 </p>
 
 <p>
 
 Confidence:
-
-{
-
-records.length>10
-
-?95
-
-:records.length>5
-
-?88
-
-:65
-
-}%
+{confidence}%
 
 </p>
 
 </div>
 
 
-<br/>
-
 
 <div
 style={{
+
+marginTop:"25px",
 
 background:"white",
 
 padding:"25px",
 
-borderRadius:"20px",
+borderRadius:"18px",
 
 boxShadow:
-"0 3px 12px rgba(0,0,0,.08)"
+"0 4px 12px rgba(0,0,0,.08)"
 
 }}
 >
 
 <h2>
 
-🎯 Savings Goal
+📄 Daily Spend Records
 
 </h2>
 
-<input
 
-type="number"
+<table
+width="100%"
+border="1"
+cellPadding="8"
+>
 
-placeholder=
-"Savings Goal (£)"
+<thead>
 
-value=
-{savingGoal}
+<tr>
 
-onChange={(e)=>
+<th>Date</th>
 
-setSavingGoal(
-e.target.value
+<th>Category</th>
+
+<th>Expense</th>
+
+<th>Description</th>
+
+</tr>
+
+</thead>
+
+
+<tbody>
+
+{
+
+records.length===0
+
+?
+
+<tr>
+
+<td
+colSpan="4"
+>
+
+No records yet
+
+</td>
+
+</tr>
+
+:
+
+records.map(
+
+r=>(
+
+<tr
+key={r.id}
+>
+
+<td>
+{r.date}
+</td>
+
+<td>
+{r.category}
+</td>
+
+<td>
+£{r.expense}
+</td>
+
+<td>
+{r.description}
+</td>
+
+</tr>
+
+)
+
 )
 
 }
 
-/>
+</tbody>
+
+</table>
 
 </div>
-
-
-<br/>
-
-
-<ReportingDashboard
-
-records={records}
-
-totalIncome={totalIncome}
-
-totalExpenses={totalExpenses}
-
-balance={balance}
-
-/>
-
 
 </div>
 
