@@ -1,0 +1,10 @@
+
+User
+↓
+Dashboard (React)
+↓
+Backend API (FastAPI)
+↓
+Prediction Service
+↓
+Database (PostgreSQL)

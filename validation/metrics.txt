@@ -1,0 +1,18 @@
+
+Validation Metrics:
+
+1. Prediction Accuracy
+- MAE
+- RMSE
+
+2. Recommendation Acceptance Rate
+
+3. Savings Improvement
+
+4. Financial Awareness Scale
+
+5. System Usability Scale (SUS)
+
+Statistical Tests:
+- Wilcoxon Signed Rank
+- Paired t-test

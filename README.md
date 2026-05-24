@@ -1,12 +1,17 @@
-# AI-Powered Personal Budget & Expense Monitoring System
 
-Created by: Gliza Maraon
-Version: v1.0 (2026)
+AI Financial Companion System
+Creator: Gliza Maraon
 
-Deployable system with:
-- Expense tracking
-- Forecasting
-- Excel reports
-- FastAPI backend
-- React frontend
-- Docker deployment
+Mission:
+Protect bank account, predict future expenses, track savings and loans.
+
+Core Features:
+- Expense entry
+- Savings tracking
+- Loan lifecycle (Active/Closed)
+- Forecast prediction
+- AI recommendations
+- Dashboard charts
+- Excel reporting
+- Validation metrics
+- Cybersecurity-ready architecture

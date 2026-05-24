@@ -1,1 +1,1 @@
-export default function Dashboard(){return(<div style={{padding:'30px'}}><h1>AI-Powered Personal Budget & Expense Monitoring System</h1><h3>Created by Gliza Maraon</h3><p>Backend connected and deployment successful 🚀</p></div>)}
+export default function Dashboard(){return <h1>AI Financial Companion - Gliza Maraon</h1>}

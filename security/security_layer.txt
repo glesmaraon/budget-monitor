@@ -1,0 +1,7 @@
+
+JWT Authentication
+HTTPS/TLS
+AES-256
+RBAC
+Audit Logs
+Explainable AI
