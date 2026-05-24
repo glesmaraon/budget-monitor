@@ -1,330 +1,370 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-export default function ReportingDashboard({
+import ReportingDashboard from "./components/ReportingDashboard";
 
-records=[],
-totalIncome,
-totalExpenses,
-balance
+export default function Dashboard() {
 
-}){
+const [incomeRecords,setIncomeRecords]=
+useState([]);
 
-const exportCSV=()=>{
+const [records,setRecords]=
+useState([]);
 
-if(records.length===0){
+const [loanTotal,setLoanTotal]=
+useState("");
 
-alert(
-"No records available"
+const [loanPaid,setLoanPaid]=
+useState("");
+
+const [savingGoal,setSavingGoal]=
+useState("");
+
+const [expense,setExpense]=
+useState("");
+
+const [category,setCategory]=
+useState("Transportation");
+
+const [description,setDescription]=
+useState("");
+
+
+
+useEffect(()=>{
+
+const savedIncome=
+
+localStorage.getItem(
+"income_records"
 );
 
+const savedExpenses=
+
+localStorage.getItem(
+"finance_records"
+);
+
+if(savedIncome){
+
+setIncomeRecords(
+JSON.parse(savedIncome)
+);
+
+}
+
+if(savedExpenses){
+
+setRecords(
+JSON.parse(savedExpenses)
+);
+
+}
+
+},[]);
+
+
+
+const saveExpense=()=>{
+
+if(!expense)
 return;
 
-}
 
-const headers=[
-"Date",
-"Category",
-"Expense",
-"Description"
-];
+const item={
 
-const rows=
+id:Date.now(),
 
-records.map(
+date:
 
-r=>
+new Date()
+.toISOString()
+.split("T")[0],
 
-[
-r.date,
-r.category,
-r.expense,
-r.description
+category,
 
-].join(",")
+expense:Number(
+expense
+),
 
-);
-
-const csv=
-
-[
-headers.join(","),
-...rows
-
-].join("\n");
-
-
-const blob=
-
-new Blob(
-
-[csv],
-
-{
-
-type:
-"text/csv;charset=utf-8;"
-
-}
-
-);
-
-
-const url=
-
-URL.createObjectURL(
-blob
-);
-
-
-const link=
-document.createElement(
-"a"
-);
-
-link.href=url;
-
-link.download=
-"Financial_Report.csv";
-
-document.body.appendChild(
-link
-);
-
-link.click();
-
-document.body.removeChild(
-link);
+description
 
 };
 
 
-const mae=
+const updated=[
 
-records.length===0
+...records,
+item
 
-?0
+];
 
-:
+setRecords(
+updated
+);
 
-Math.abs(
-balance
-)*0.1;
+localStorage.setItem(
 
+"finance_records",
 
-const rmse=
-
-Math.sqrt(
-mae
-).toFixed(2);
-
-
-const completeness=
-
-Math.min(
-
-records.length*10,
-
-100
+JSON.stringify(
+updated)
 
 );
+
+setExpense("");
+
+setDescription("");
+
+};
+
+
+
+const totalIncome=
+
+incomeRecords.reduce(
+
+(sum,r)=>
+
+sum+
+Number(
+r.amount||0
+),
+
+0
+
+);
+
+
+
+const totalExpenses=
+
+records.reduce(
+
+(sum,r)=>
+
+sum+
+Number(
+r.expense||0
+),
+
+0
+
+);
+
+
+
+const remainingLoan=
+
+Math.max(
+
+Number(
+loanTotal||0
+)
+
+-
+
+Number(
+loanPaid||0
+),
+
+0
+
+);
+
+
+
+const balance=
+
+totalIncome
+-
+totalExpenses
+-
+remainingLoan;
+
+
+
+const forecast=()=>{
+
+if(balance<0){
+
+return
+
+"⚠ Overspending detected. Reduce optional expenses.";
+
+}
+
+if(
+
+remainingLoan>
+
+totalIncome*.5
+
+){
+
+return
+
+"📉 Loan burden affecting savings growth.";
+
+}
+
+if(records.length>5){
+
+return
+
+"📈 Stable spending trend detected.";
+
+}
+
+return
+
+"Need more daily records for stronger forecasting.";
+
+};
 
 
 
 return(
 
-<div>
+<div
+style={{
 
-<h2>
+maxWidth:"1200px",
 
-📄 Reporting & Analytics
+margin:"auto",
 
-</h2>
+padding:"25px",
+
+background:"#f5f7fb",
+
+minHeight:"100vh"
+
+}}
+>
+
+<h1>
+
+💰 AI Financial Companion
+
+</h1>
 
 
 <div
 style={{
+
 display:"grid",
+
 gridTemplateColumns:
-"repeat(auto-fit,minmax(220px,1fr))",
-gap:"15px",
-marginBottom:"20px"
+"repeat(auto-fit,minmax(230px,1fr))",
+
+gap:"20px",
+
+marginTop:"20px"
+
 }}
 >
 
-<div style={{
-padding:"20px",
-borderRadius:"15px",
-boxShadow:
-"0 2px 8px rgba(0,0,0,.1)"
-}}>
 
-<h3>
-💼 Income
-</h3>
-
-<h1>
-£{totalIncome}
-</h1>
-
-</div>
-
-
-
-<div style={{
-padding:"20px",
-borderRadius:"15px",
-boxShadow:
-"0 2px 8px rgba(0,0,0,.1)"
-}}>
-
-<h3>
-💸 Expenses
-</h3>
-
-<h1>
-£{totalExpenses}
-</h1>
-
-</div>
-
-
-<div style={{
-padding:"20px",
-borderRadius:"15px",
-boxShadow:
-"0 2px 8px rgba(0,0,0,.1)"
-}}>
-
-<h3>
-💰 Cashflow
-</h3>
-
-<h1>
-£{balance}
-</h1>
-
-</div>
-
-</div>
-
-
-
-<h3>
-
-📈 Validation Metrics
-
-</h3>
-
-<p>
-MAE:
-{mae.toFixed(2)}
-</p>
-
-<p>
-RMSE:
-{rmse}
-</p>
-
-<p>
-Data Completeness:
-{completeness}%
-</p>
-
-
-<button
-
-style={{
-
-padding:"12px",
-
-border:"none",
-
-borderRadius:"10px",
-
-cursor:"pointer"
-
-}}
-
-onClick={exportCSV}
-
->
-
-⬇ Download Spreadsheet
-
-</button>
-
-
-<br/><br/>
-
-
-<table
-style={{
-width:"100%",
-borderCollapse:"collapse"
-}}
-border="1"
->
-
-<thead>
-
-<tr>
-
-<th>Date</th>
-
-<th>Category</th>
-
-<th>Expense</th>
-
-<th>Description</th>
-
-</tr>
-
-</thead>
-
-
-<tbody>
+{[
 
 {
 
-records.length===0
+title:"💼 Income",
+
+value:`£${totalIncome}`,
+
+sub:
+
+`${incomeRecords.length} sources`
+
+},
+
+{
+
+title:"💸 Daily Spend",
+
+value:`£${totalExpenses}`,
+
+sub:
+
+`${records.length} transactions`
+
+},
+
+{
+
+title:"🏦 Loan",
+
+value:`£${remainingLoan}`,
+
+sub:"Remaining"
+
+},
+
+{
+
+title:"🎯 Goal",
+
+value:
+
+savingGoal
 
 ?
 
-<tr>
+`${Math.max(
 
-<td
-colSpan="4"
->
+((balance/savingGoal)*100)
 
-No records available
+.toFixed(0),
 
-</td>
+0
 
-</tr>
+)}%`
 
-:
+:"0%",
 
-records.map(
+sub:"Progress"
 
-(item,index)=>(
+}
 
-<tr
+].map(
+
+(card,index)=>(
+
+<div
 key={index}
+style={{
+
+background:"white",
+
+padding:"20px",
+
+borderRadius:"20px",
+
+boxShadow:
+"0 3px 12px rgba(0,0,0,.08)"
+
+}}
 >
 
-<td>{item.date}</td>
+<h3>
 
-<td>{item.category}</td>
+{card.title}
 
-<td>
-£{item.expense}
-</td>
+</h3>
 
-<td>
-{item.description}
-</td>
+<h1>
 
-</tr>
+{card.value}
+
+</h1>
+
+<p>
+
+{card.sub}
+
+</p>
+
+</div>
 
 )
 
@@ -332,9 +372,239 @@ key={index}
 
 }
 
-</tbody>
+</div>
 
-</table>
+
+
+<br/>
+
+
+<div
+style={{
+
+background:"white",
+
+padding:"25px",
+
+borderRadius:"20px",
+
+boxShadow:
+"0 3px 12px rgba(0,0,0,.08)"
+
+}}
+>
+
+<h2>
+
+⚡ Daily Tracker
+
+</h2>
+
+
+<select
+
+value={category}
+
+onChange={(e)=>
+
+setCategory(
+e.target.value
+)
+
+}
+
+>
+
+<option>
+
+Transportation
+
+</option>
+
+<option>
+
+Food
+
+</option>
+
+<option>
+
+Bills
+
+</option>
+
+<option>
+
+Shopping
+
+</option>
+
+</select>
+
+
+<input
+
+type="number"
+
+placeholder="Expense (£)"
+
+value={expense}
+
+onChange={(e)=>
+
+setExpense(
+e.target.value
+)
+
+}
+
+/>
+
+
+<input
+
+placeholder=
+"Description"
+
+value={description}
+
+onChange={(e)=>
+
+setDescription(
+e.target.value
+)
+
+}
+
+/>
+
+
+<button
+onClick={saveExpense}
+>
+
+Add Expense
+
+</button>
+
+</div>
+
+
+<br/>
+
+
+<div
+style={{
+
+background:"white",
+
+padding:"25px",
+
+borderRadius:"20px",
+
+boxShadow:
+"0 3px 12px rgba(0,0,0,.08)"
+
+}}
+>
+
+<h2>
+
+🤖 Forecast & Recommendation
+
+</h2>
+
+<p>
+
+{forecast()}
+
+</p>
+
+<p>
+
+Confidence:
+
+{
+
+records.length>10
+
+?95
+
+:records.length>5
+
+?88
+
+:65
+
+}%
+
+</p>
+
+</div>
+
+
+<br/>
+
+
+<div
+style={{
+
+background:"white",
+
+padding:"25px",
+
+borderRadius:"20px",
+
+boxShadow:
+"0 3px 12px rgba(0,0,0,.08)"
+
+}}
+>
+
+<h2>
+
+🎯 Savings Goal
+
+</h2>
+
+<input
+
+type="number"
+
+placeholder=
+"Savings Goal (£)"
+
+value=
+{savingGoal}
+
+onChange={(e)=>
+
+setSavingGoal(
+e.target.value
+)
+
+}
+
+/>
+
+</div>
+
+
+<br/>
+
+
+<ReportingDashboard
+
+records={records}
+
+totalIncome={totalIncome}
+
+totalExpenses={totalExpenses}
+
+balance={balance}
+
+/>
+
 
 </div>
 
