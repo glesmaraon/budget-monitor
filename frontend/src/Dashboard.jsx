@@ -1,472 +1,495 @@
 import React, { useEffect, useState } from "react";
+
 import IncomeTracker from "./components/IncomeTracker";
 import ExpenseTracker from "./components/ExpenseTracker";
 import LoanTracker from "./components/LoanTracker";
+import PredictionEngine from "./components/PredictionEngine";
+import ReportingDashboard from "./components/ReportingDashboard";
 
 export default function Dashboard() {
 
-const [incomeType,setIncomeType]=useState("Salary");
-const [incomeAmount,setIncomeAmount]=useState("");
+  // -----------------------------
+  // Income State
+  // -----------------------------
 
-const [incomeRecords,setIncomeRecords]=useState([]);
+  const [incomeType,setIncomeType]=useState("Salary");
+  const [incomeAmount,setIncomeAmount]=useState("");
+  const [incomeRecords,setIncomeRecords]=useState([]);
 
-const [category,setCategory]=useState("Transportation");
-const [expense,setExpense]=useState("");
-const [description,setDescription]=useState("");
-const [date,setDate]=useState("");
+  // -----------------------------
+  // Expense State
+  // -----------------------------
 
-const [records,setRecords]=useState([]);
+  const [category,setCategory]=
+  useState("Transportation");
 
-const [loanTotal,setLoanTotal]=useState("");
-const [loanPaid,setLoanPaid]=useState("");
+  const [expense,setExpense]=
+  useState("");
 
-const [savingGoal,setSavingGoal]=useState("");
+  const [description,setDescription]=
+  useState("");
 
-useEffect(()=>{
+  const [date,setDate]=
+  useState("");
 
-const expenses=
-localStorage.getItem(
-"finance_records"
-);
+  const [records,setRecords]=
+  useState([]);
 
-const incomes=
-localStorage.getItem(
-"income_records"
-);
+  // -----------------------------
+  // Loan + Goal
+  // -----------------------------
 
-if(expenses){
+  const [loanTotal,setLoanTotal]=
+  useState("");
 
-setRecords(
-JSON.parse(expenses)
-);
+  const [loanPaid,setLoanPaid]=
+  useState("");
 
-}
+  const [savingGoal,setSavingGoal]=
+  useState("");
 
-if(incomes){
+  // -----------------------------
+  // Load saved data
+  // -----------------------------
 
-setIncomeRecords(
-JSON.parse(incomes)
-);
+  useEffect(()=>{
 
-}
+    const savedExpenses=
+    localStorage.getItem(
+      "finance_records"
+    );
 
-},[]);
+    const savedIncome=
+    localStorage.getItem(
+      "income_records"
+    );
 
+    if(savedExpenses){
 
-const saveIncome=()=>{
+      setRecords(
+        JSON.parse(
+          savedExpenses
+        )
+      );
 
-const item={
+    }
 
-type:incomeType,
-amount:incomeAmount,
-date:new Date()
-.toLocaleDateString()
+    if(savedIncome){
 
-};
+      setIncomeRecords(
+        JSON.parse(
+          savedIncome
+        )
+      );
 
-const updated=[
-...incomeRecords,
-item
-];
+    }
 
-setIncomeRecords(updated);
-
-localStorage.setItem(
-"income_records",
-JSON.stringify(updated)
-);
-
-setIncomeAmount("");
-
-};
-
-
-const saveExpense=()=>{
-
-const item={
-
-date,
-category,
-expense,
-description
-
-};
-
-const updated=[
-...records,
-item
-];
-
-setRecords(updated);
-
-localStorage.setItem(
-"finance_records",
-JSON.stringify(updated)
-);
-
-setExpense("");
-setDescription("");
-
-};
+  },[]);
 
 
-const totalIncome=
-incomeRecords.reduce(
-(sum,item)=>
-sum+
-Number(item.amount||0),
-0
-);
+  // -----------------------------
+  // Income Save
+  // -----------------------------
 
-const totalExpenses=
-records.reduce(
-(sum,item)=>
-sum+
-Number(item.expense||0),
-0
-);
+  const saveIncome=()=>{
 
-const remainingLoan=
-Math.max(
-Number(loanTotal||0)
--
-Number(loanPaid||0),
-0
-);
+    if(!incomeAmount)
+    return;
 
-const balance=
-totalIncome-
-totalExpenses-
-remainingLoan;
+    const item={
 
-const confidence=
-records.length>=5
-?92
-:records.length>=3
-?85
-:70;
+      type:incomeType,
 
+      amount:
+      Number(
+        incomeAmount
+      ),
 
-let risk="";
-let recommendation="";
-let projection="";
+      date:
+      new Date()
+      .toLocaleDateString()
 
-if(balance<0){
+    };
 
-risk="🔴 High";
+    const updated=[
 
-recommendation=
-"Spending and debt exceed income.";
+      ...incomeRecords,
+      item
 
-projection=
-"Deficit projected this month.";
+    ];
 
-}
+    setIncomeRecords(
+      updated
+    );
 
-else if(
-remainingLoan>
-totalIncome*.5
-){
+    localStorage.setItem(
 
-risk="🟠 Medium";
+      "income_records",
 
-recommendation=
-"Debt burden affecting finances.";
+      JSON.stringify(
+        updated
+      )
 
-projection=
-"Slower savings growth projected.";
+    );
 
-}
+    setIncomeAmount("");
 
-else{
-
-risk="🟢 Low";
-
-recommendation=
-"Financial condition stable.";
-
-projection=
-"Savings goal achievable.";
-
-}
+  };
 
 
-return(
+  // -----------------------------
+  // Expense Save
+  // -----------------------------
 
-<div style={{
+  const saveExpense=()=>{
+
+    if(
+      !expense||
+      !date
+    )
+    return;
+
+    const item={
+
+      date,
+
+      category,
+
+      expense:
+      Number(
+        expense
+      ),
+
+      description
+
+    };
+
+    const updated=[
+
+      ...records,
+      item
+
+    ];
+
+    setRecords(
+      updated
+    );
+
+    localStorage.setItem(
+
+      "finance_records",
+
+      JSON.stringify(
+        updated
+      )
+
+    );
+
+    setExpense("");
+
+    setDescription("");
+
+  };
+
+
+  // -----------------------------
+  // Financial Stats
+  // -----------------------------
+
+  const totalIncome=
+
+  incomeRecords.reduce(
+
+    (sum,item)=>
+
+    sum+
+    Number(
+      item.amount||0
+    ),
+
+    0
+
+  );
+
+
+
+  const totalExpenses=
+
+  records.reduce(
+
+    (sum,item)=>
+
+    sum+
+    Number(
+      item.expense||0
+    ),
+
+    0
+
+  );
+
+
+  const remainingLoan=
+
+  Math.max(
+
+    Number(
+      loanTotal||0
+    )
+
+    -
+
+    Number(
+      loanPaid||0
+    ),
+
+    0
+
+  );
+
+
+  const balance=
+
+  totalIncome
+
+  -
+
+  totalExpenses
+
+  -
+
+  remainingLoan;
+
+
+  const confidence=
+
+  records.length>=10
+
+  ?95
+
+  :records.length>=5
+
+  ?88
+
+  :75;
+
+
+  return(
+
+<div
+style={{
+
 maxWidth:"1000px",
+
 margin:"auto",
+
 padding:"30px",
+
 fontFamily:"Arial"
-}}>
+
+}}
+
+>
 
 <h1>
-💰 AI Financial Companion V4
+
+💰 AI Financial Companion V5
+
 </h1>
+
+<p>
+
+Pragmatic Architecture +
+Security +
+Reporting +
+Prediction
+
+</p>
+
+<hr/>
+
+
+<IncomeTracker
+
+incomeType=
+{incomeType}
+
+setIncomeType=
+{setIncomeType}
+
+incomeAmount=
+{incomeAmount}
+
+setIncomeAmount=
+{setIncomeAmount}
+
+saveIncome=
+{saveIncome}
+
+/>
+
+<hr/>
+
+
+<ExpenseTracker
+
+category=
+{category}
+
+setCategory=
+{setCategory}
+
+expense=
+{expense}
+
+setExpense=
+{setExpense}
+
+description=
+{description}
+
+setDescription=
+{setDescription}
+
+date=
+{date}
+
+setDate=
+{setDate}
+
+saveExpense=
+{saveExpense}
+
+/>
+
+<hr/>
+
+
+<LoanTracker
+
+loanTotal=
+{loanTotal}
+
+setLoanTotal=
+{setLoanTotal}
+
+loanPaid=
+{loanPaid}
+
+setLoanPaid=
+{setLoanPaid}
+
+remainingLoan=
+{remainingLoan}
+
+/>
 
 <hr/>
 
 <h2>
-💼 Income Sources
+
+🎯 Savings Goal
+
 </h2>
 
-<select
-value={incomeType}
-onChange={(e)=>
-setIncomeType(
-e.target.value
-)}
->
-
-<option>
-Salary
-</option>
-
-<option>
-Project
-</option>
-
-<option>
-Freelance
-</option>
-
-<option>
-Research
-</option>
-
-<option>
-Allowance
-</option>
-
-</select>
-
-<br/><br/>
-
 <input
+
 type="number"
-placeholder="Income (£)"
-value={incomeAmount}
-onChange={(e)=>
-setIncomeAmount(
+
+placeholder=
+"Savings Goal (£)"
+
+value=
+{savingGoal}
+
+onChange=
+{
+
+(e)=>
+
+setSavingGoal(
+
 e.target.value
-)}
+
+)
+
+}
+
 />
 
-<button
-onClick={saveIncome}
->
+<hr/>
 
-Add Income
+<h2>
 
-</button>
+📊 Dashboard Summary
+
+</h2>
 
 <p>
 Total Income:
 £{totalIncome}
 </p>
 
-<hr/>
-
-<h2>
-💸 Expenses
-</h2>
-
-<select
-value={category}
-onChange={(e)=>
-setCategory(
-e.target.value
-)}
->
-
-<option>
-Transportation
-</option>
-
-<option>
-Food
-</option>
-
-<option>
-Bills
-</option>
-
-<option>
-Travel
-</option>
-
-<option>
-Shopping
-</option>
-
-</select>
-
-<br/><br/>
-
-<input
-type="number"
-placeholder="Expense (£)"
-value={expense}
-onChange={(e)=>
-setExpense(
-e.target.value
-)}
-/>
-
-<br/><br/>
-
-<input
-placeholder="Description"
-value={description}
-onChange={(e)=>
-setDescription(
-e.target.value
-)}
-/>
-
-<br/><br/>
-
-<input
-type="date"
-value={date}
-onChange={(e)=>
-setDate(
-e.target.value
-)}
-/>
-
-<br/><br/>
-
-<button
-onClick={saveExpense}
->
-
-Save Expense
-
-</button>
-
-<hr/>
-
-<h2>
-🏦 Loan
-</h2>
-
-<input
-type="number"
-placeholder="Loan total"
-value={loanTotal}
-onChange={(e)=>
-setLoanTotal(
-e.target.value
-)}
-/>
-
-<input
-type="number"
-placeholder="Loan paid"
-value={loanPaid}
-onChange={(e)=>
-setLoanPaid(
-e.target.value
-)}
-/>
+<p>
+Total Expenses:
+£{totalExpenses}
+</p>
 
 <p>
-
-Remaining:
+Remaining Loan:
 £{remainingLoan}
+</p>
 
+<p>
+Current Balance:
+£{balance}
+</p>
+
+<p>
+Savings Goal:
+£{savingGoal}
 </p>
 
 <hr/>
 
-<h2>
-📊 Dashboard Summary
-</h2>
 
-<p>Total Expenses: £{totalExpenses}</p>
+<PredictionEngine
 
-<p>Current Balance: £{balance}</p>
+balance=
+{balance}
 
-<p>Savings Goal: £{savingGoal}</p>
+remainingLoan=
+{remainingLoan}
 
-<input
-type="number"
-placeholder="Savings Goal (£)"
-value={savingGoal}
-onChange={(e)=>
-setSavingGoal(
-e.target.value
-)}
+totalIncome=
+{totalIncome}
+
+confidence=
+{confidence}
+
+records=
+{records}
+
 />
 
 <hr/>
 
-<h2>
-🤖 AI Prediction
-</h2>
 
-<p>
-Risk:
-{risk}
-</p>
+<ReportingDashboard
 
-<p>
-Recommendation:
-{recommendation}
-</p>
+records=
+{records}
 
-<p>
-Projection:
-{projection}
-</p>
+totalIncome=
+{totalIncome}
 
-<p>
-Confidence:
-{confidence}%
-</p>
+totalExpenses=
+{totalExpenses}
 
-<hr/>
+balance=
+{balance}
 
-<h2>
-📄 Reporting
-</h2>
-
-<table border="1">
-
-<thead>
-
-<tr>
-
-<th>Date</th>
-<th>Category</th>
-<th>Expense</th>
-<th>Description</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{
-records.map((r,i)=>(
-
-<tr key={i}>
-
-<td>{r.date}</td>
-<td>{r.category}</td>
-<td>£{r.expense}</td>
-<td>{r.description}</td>
-
-</tr>
-
-))
-}
-
-</tbody>
-
-</table>
+/>
 
 </div>
 
