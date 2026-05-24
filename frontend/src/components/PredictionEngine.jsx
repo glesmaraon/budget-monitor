@@ -5,41 +5,81 @@ export default function PredictionEngine({
 balance,
 remainingLoan,
 totalIncome,
-confidence
+confidence,
+records=[]
 
 }){
 
 let risk="";
 let recommendation="";
 let projection="";
+let nextDecision="";
+
+const transportTotal=
+
+records
+.filter(
+r=>
+r.category==="Transportation"
+)
+.reduce(
+(sum,r)=>
+sum+
+Number(
+r.expense||0
+),
+0
+);
+
 
 if(balance<0){
 
 risk="🔴 High";
 
-recommendation=
-"Spending exceeds income.";
-
 projection=
-"Deficit likely this month.";
+"Negative cashflow expected.";
+
+recommendation=
+"Reduce non-essential expenses immediately.";
+
+nextDecision=
+"Delay large purchases and prioritize debt repayment.";
 
 }
 
 else if(
-
 remainingLoan>
-
-totalIncome*.5
-
+totalIncome*0.5
 ){
 
 risk="🟠 Medium";
 
+projection=
+"Loan burden affecting growth.";
+
 recommendation=
-"Debt burden slowing savings.";
+"Prioritize loan reduction over discretionary spending.";
+
+nextDecision=
+"Allocate 20–30% of available funds toward loans.";
+
+}
+
+else if(
+transportTotal>
+200
+){
+
+risk="🟡 Moderate";
 
 projection=
-"Moderate financial pressure.";
+"Transportation spending trend increasing.";
+
+recommendation=
+"Transportation costs exceed expected pattern.";
+
+nextDecision=
+"Reduce transport spending or combine trips.";
 
 }
 
@@ -47,13 +87,17 @@ else{
 
 risk="🟢 Low";
 
-recommendation=
-"Financial status stable.";
-
 projection=
-"Goal achievable.";
+"Financial outlook stable.";
+
+recommendation=
+"Savings target remains achievable.";
+
+nextDecision=
+"Continue saving surplus funds.";
 
 }
+
 
 return(
 
@@ -61,26 +105,29 @@ return(
 
 <h2>
 
-🤖 AI Prediction
+🤖 AI Forecast & Recommendation
 
 </h2>
 
 <div
-
 style={{
-
 padding:"15px",
 border:"1px solid #ddd",
 borderRadius:"10px"
-
 }}
-
 >
 
 <p>
 
 Risk:
 {risk}
+
+</p>
+
+<p>
+
+Forecast:
+{projection}
 
 </p>
 
@@ -93,8 +140,8 @@ Recommendation:
 
 <p>
 
-Projection:
-{projection}
+Next Decision:
+{nextDecision}
 
 </p>
 
