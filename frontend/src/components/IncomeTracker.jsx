@@ -1,8 +1,51 @@
 import React from "react";
-export default function Dashboard(){
-return (
+
+export default function IncomeTracker({
+incomeType,
+setIncomeType,
+incomeAmount,
+setIncomeAmount,
+saveIncome
+}){
+
+return(
+
 <div>
-<h1>AI Financial Companion V4</h1>
-<p>Includes reporting, prediction, security layer and reliability metrics.</p>
+
+<h2>💼 Income Sources</h2>
+
+<select
+value={incomeType}
+onChange={(e)=>
+setIncomeType(e.target.value)
+}
+>
+
+<option>Salary</option>
+<option>Project</option>
+<option>Freelance</option>
+<option>Research</option>
+<option>Allowance</option>
+
+</select>
+
+<br/><br/>
+
+<input
+type="number"
+placeholder="Income (£)"
+value={incomeAmount}
+onChange={(e)=>
+setIncomeAmount(e.target.value)
+}
+/>
+
+<button onClick={saveIncome}>
+Add Income
+</button>
+
 </div>
-)}
+
+)
+
+}
