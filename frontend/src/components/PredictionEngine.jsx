@@ -1,8 +1,80 @@
 import React from "react";
-export default function Dashboard(){
-return (
+
+export default function PredictionEngine({
+
+balance,
+remainingLoan,
+totalIncome,
+confidence
+
+}){
+
+let risk="";
+let recommendation="";
+
+if(balance<0){
+
+risk="🔴 High";
+
+recommendation=
+"Spending exceeds available resources.";
+
+}
+
+else if(
+remainingLoan>
+totalIncome*.5
+){
+
+risk="🟠 Medium";
+
+recommendation=
+"Loan burden slowing financial growth.";
+
+}
+
+else{
+
+risk="🟢 Low";
+
+recommendation=
+"Financial pattern stable.";
+
+}
+
+return(
+
 <div>
-<h1>AI Financial Companion V4</h1>
-<p>Includes reporting, prediction, security layer and reliability metrics.</p>
+
+<h2>
+
+🤖 AI Prediction
+
+</h2>
+
+<p>
+
+Risk:
+{risk}
+
+</p>
+
+<p>
+
+Recommendation:
+{recommendation}
+
+</p>
+
+<p>
+
+Confidence:
+{confidence}%
+
+</p>
+
 </div>
-)}
+
+)
+
+}
