@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from "react";
+import IncomeTracker from "./components/IncomeTracker";
+import ExpenseTracker from "./components/ExpenseTracker";
+import LoanTracker from "./components/LoanTracker";
 
 export default function Dashboard() {
 
