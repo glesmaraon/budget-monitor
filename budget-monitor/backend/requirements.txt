@@ -1,7 +1,0 @@
-fastapi
-uvicorn
-pandas
-openpyxl
-sqlalchemy
-scikit-learn
-python-dotenv
