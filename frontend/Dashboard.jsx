@@ -14,7 +14,8 @@ export default function Dashboard() {
   const [records, setRecords] = useState([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("finance");
+    const saved = localStorage.getItem("finance_records");
+
     if (saved) {
       setRecords(JSON.parse(saved));
     }
@@ -25,7 +26,7 @@ export default function Dashboard() {
       date,
       category,
       expense,
-      description,
+      description
     };
 
     const updated = [...records, item];
@@ -33,9 +34,13 @@ export default function Dashboard() {
     setRecords(updated);
 
     localStorage.setItem(
-      "finance",
+      "finance_records",
       JSON.stringify(updated)
     );
+
+    setExpense("");
+    setDescription("");
+    setDate("");
   };
 
   const totalExpenses = records.reduce(
@@ -43,17 +48,33 @@ export default function Dashboard() {
     0
   );
 
-  const remainingLoan =
-    Math.max(
-      Number(loanTotal || 0)
-      - Number(loanPaid || 0),
-      0
-    );
+  const remainingLoan = Math.max(
+    Number(loanTotal || 0) -
+      Number(loanPaid || 0),
+    0
+  );
 
   const balance =
-    Number(income || 0)
-    - totalExpenses
-    - remainingLoan;
+    Number(income || 0) -
+    totalExpenses -
+    remainingLoan;
+
+  let risk = "";
+  let recommendation = "";
+
+  if (balance < 0) {
+    risk = "🔴 High";
+    recommendation =
+      "Reduce transportation and optional spending.";
+  } else if (balance < 500) {
+    risk = "🟠 Medium";
+    recommendation =
+      "Monitor travel and transportation expenses.";
+  } else {
+    risk = "🟢 Low";
+    recommendation =
+      "Financial status appears stable.";
+  }
 
   return (
     <div
@@ -64,7 +85,11 @@ export default function Dashboard() {
         fontFamily: "Arial"
       }}
     >
-      <h1>💰 AI Financial Companion V3</h1>
+      <h1>
+        💰 AI Financial Companion V3
+      </h1>
+
+      <hr />
 
       <h2>Income</h2>
 
@@ -72,20 +97,20 @@ export default function Dashboard() {
         id="income"
         name="income"
         type="number"
-        value={income}
         placeholder="Income (£)"
-        onChange={(e)=>
+        value={income}
+        onChange={(e) =>
           setIncome(e.target.value)
         }
       />
 
-      <hr/>
+      <hr />
 
-      <h2>Expenses</h2>
+      <h2>Expense Entry</h2>
 
       <select
         value={category}
-        onChange={(e)=>
+        onChange={(e) =>
           setCategory(e.target.value)
         }
       >
@@ -94,92 +119,101 @@ export default function Dashboard() {
         <option>Bills</option>
         <option>Travel</option>
         <option>Shopping</option>
+        <option>Conference</option>
+        <option>Emergency</option>
       </select>
 
-      <br/><br/>
+      <br />
+      <br />
 
       <input
+        id="expense"
+        name="expense"
         type="number"
+        placeholder="Expense amount (£)"
         value={expense}
-        placeholder="Expense (£)"
-        onChange={(e)=>
+        onChange={(e) =>
           setExpense(e.target.value)
         }
       />
 
-      <br/><br/>
+      <br />
+      <br />
 
       <input
-        value={description}
         placeholder="Description"
-        onChange={(e)=>
+        value={description}
+        onChange={(e) =>
           setDescription(e.target.value)
         }
       />
 
-      <br/><br/>
+      <br />
+      <br />
 
       <input
         type="date"
         value={date}
-        onChange={(e)=>
+        onChange={(e) =>
           setDate(e.target.value)
         }
       />
 
-      <br/><br/>
+      <br />
+      <br />
 
       <button onClick={saveRecord}>
         Save Record
       </button>
 
-      <hr/>
+      <hr />
 
-      <h2>Loans</h2>
+      <h2>Loan Tracking</h2>
 
       <input
         type="number"
-        placeholder="Loan total"
+        placeholder="Loan Total (£)"
         value={loanTotal}
-        onChange={(e)=>
+        onChange={(e) =>
           setLoanTotal(e.target.value)
         }
       />
 
-      <br/><br/>
+      <br />
+      <br />
 
       <input
         type="number"
-        placeholder="Loan paid"
+        placeholder="Loan Paid (£)"
         value={loanPaid}
-        onChange={(e)=>
+        onChange={(e) =>
           setLoanPaid(e.target.value)
         }
       />
 
       <p>
         Status:
-        {remainingLoan===0
-        ?" CLOSED ✅"
-        :" ACTIVE 🔴"}
+        {remainingLoan === 0
+          ? " CLOSED ✅"
+          : " ACTIVE 🔴"}
       </p>
 
-      <hr/>
+      <hr />
 
       <h2>Savings Goal</h2>
 
       <input
         type="number"
-        placeholder="Savings (£)"
+        placeholder="Savings Goal (£)"
         value={savingGoal}
-        onChange={(e)=>
+        onChange={(e) =>
           setSavingGoal(e.target.value)
         }
       />
 
-      <hr/>
+      <hr />
 
-      <h2>Dashboard</h2>
+      <h2>Dashboard Summary</h2>
 
       <p>
         Total Expenses:
@@ -201,6 +235,19 @@ export default function Dashboard() {
         £{savingGoal}
       </p>
 
+      <hr />
+
+      <h2>🤖 Prediction</h2>
+
+      <p>Risk: {risk}</p>
+
+      <p>
+        Recommendation:
+        {recommendation}
+      </p>
+
+      <hr />
+
       <h2>Reporting</h2>
 
       <table border="1">
@@ -214,16 +261,14 @@ export default function Dashboard() {
         </thead>
 
         <tbody>
-
-        {records.map((r,i)=>(
-          <tr key={i}>
-            <td>{r.date}</td>
-            <td>{r.category}</td>
-            <td>£{r.expense}</td>
-            <td>{r.description}</td>
-          </tr>
-        ))}
-
+          {records.map((r, i) => (
+            <tr key={i}>
+              <td>{r.date}</td>
+              <td>{r.category}</td>
+              <td>£{r.expense}</td>
+              <td>{r.description}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
