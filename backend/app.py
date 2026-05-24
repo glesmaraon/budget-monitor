@@ -1,1 +1,1 @@
-print('backend')
+print('AI Financial Companion Backend')
