@@ -3,102 +3,89 @@ import React, { useState } from "react";
 export default function Dashboard() {
   const [type, setType] = useState("Expense");
   const [category, setCategory] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
   const [amount, setAmount] = useState("");
+  const [date, setDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
   const [records, setRecords] = useState([]);
 
   const addTransaction = () => {
-    if (!category || !amount) return;
+    if (!amount || !category) return;
+
+    const finalCategory =
+      category === "Other"
+        ? customCategory
+        : category;
 
     const newRecord = {
-      date: new Date().toLocaleDateString(),
+      date,
       type,
-      category,
+      category: finalCategory,
       amount: Number(amount)
     };
 
     setRecords([...records, newRecord]);
 
     setCategory("");
+    setCustomCategory("");
     setAmount("");
   };
 
   const totalIncome = records
-    .filter((x) => x.type === "Income")
-    .reduce((sum, x) => sum + x.amount, 0);
+    .filter(x => x.type === "Income")
+    .reduce((s,x)=>s+x.amount,0);
 
   const totalExpense = records
-    .filter((x) => x.type === "Expense")
-    .reduce((sum, x) => sum + x.amount, 0);
+    .filter(x => x.type === "Expense")
+    .reduce((s,x)=>s+x.amount,0);
 
   const totalSavings = records
-    .filter((x) => x.type === "Savings")
-    .reduce((sum, x) => sum + x.amount, 0);
+    .filter(x => x.type === "Savings")
+    .reduce((s,x)=>s+x.amount,0);
 
-  const validation = records.length;
+  const validation=records.length;
 
-  const confidence =
-    validation >= 20
-      ? 90
-      : validation >= 10
-      ? 80
-      : 60;
-
-  const realityScore =
-    validation >= 20
-      ? 90
-      : 70;
-
-  const financialHealth = Math.max(
+  const financialHealth=Math.max(
     0,
     Math.min(
       100,
       Math.round(
-        ((totalIncome - totalExpense) /
-          (totalIncome || 1)) * 100
+        ((totalIncome-totalExpense)/
+        (totalIncome||1))*100
       )
     )
   );
 
-  const predictedSavings =
-    totalIncome - totalExpense + totalSavings;
+  const confidence=
+    validation>=20 ? 90 :
+    validation>=10 ? 80 : 60;
 
-  const recommendation =
-    predictedSavings < 100
-      ? "Try saving £5/day"
-      : "You're on track 🎉";
+  const predictedSavings=
+    totalIncome-totalExpense+
+    totalSavings;
 
-  const weeklySpend =
-    Math.round(totalExpense / 4);
+  const weeklySpend=
+    Math.round(totalExpense/4);
 
-  const savingsRate =
-    totalIncome
-      ? Math.round(
-          (totalSavings / totalIncome) * 100
-        )
-      : 0;
+  const downloadReport=()=>{
 
-  const netBalance =
-    totalIncome - totalExpense;
-
-  const downloadReport = () => {
-    const report = `
+    const report=`
 
 GLIZA FINANCIAL REPORT
 
 Income: £${totalIncome}
 
-Expenses: £${totalExpense}
+Expense: £${totalExpense}
 
 Savings: £${totalSavings}
 
-Financial Health:
+Health:
 ${financialHealth}/100
 
-AI Confidence:
+Confidence:
 ${confidence}%
-
-Reality Score:
-${realityScore}%
 
 Predicted Savings:
 £${predictedSavings}
@@ -106,266 +93,208 @@ Predicted Savings:
 Transactions:
 ${validation}
 
-Weekly Spend:
-£${weeklySpend}
-
-Savings Rate:
-${savingsRate}%
-
-Net Balance:
-£${netBalance}
-
 `;
 
-    const blob = new Blob(
+    const blob=new Blob(
       [report],
-      { type: "text/plain" }
+      {type:"text/plain"}
     );
 
-    const link =
-      document.createElement("a");
+    const link=
+    document.createElement("a");
 
-    link.href =
-      URL.createObjectURL(blob);
+    link.href=
+    URL.createObjectURL(blob);
 
-    link.download =
-      "Financial_Report.txt";
+    link.download=
+    "Financial_Report.txt";
 
     link.click();
   };
 
-  return (
-    <div
-      style={{
-        padding: "30px",
-        fontFamily: "Arial",
-        maxWidth: "1000px",
-        margin: "auto"
-      }}
-    >
-      <h1>
-        💰 Gliza Personal Financial Tracker
-      </h1>
+  return(
+    <div style={{
+      maxWidth:"1000px",
+      margin:"auto",
+      padding:"30px",
+      fontFamily:"Arial"
+    }}>
 
-      <p>
-        Track smarter. Build healthy
-        financial habits.
-      </p>
+<h1>
+💰 Financial Monitoring System
+</h1>
 
-      <hr />
+<p>
+Track daily spending smarter
+</p>
 
-      <h2>
-        ⚡ Daily Tracker
-      </h2>
+<hr/>
 
-      <select
-        value={type}
-        onChange={(e) =>
-          setType(e.target.value)
-        }
-      >
-        <option>Income</option>
-        <option>Expense</option>
-        <option>Savings</option>
-        <option>Loan</option>
-      </select>
+<h2>
+⚡ Daily Tracker
+</h2>
 
-      <br /><br />
+<select
+value={type}
+onChange={(e)=>
+setType(e.target.value)}
+>
+<option>Expense</option>
+<option>Income</option>
+<option>Savings</option>
+<option>Loan</option>
+</select>
 
-      <select
-        value={category}
-        onChange={(e)=>
-          setCategory(e.target.value)
-        }
-      >
-        <option value="">
-          Select Category
-        </option>
+<select
+value={category}
+onChange={(e)=>
+setCategory(e.target.value)}
+>
 
-        <optgroup label="Expense">
-          <option>Transportation</option>
-          <option>Food</option>
-          <option>Bills</option>
-          <option>Shopping</option>
-          <option>Health</option>
-          <option>Education</option>
-        </optgroup>
+<option value="">
+Select Category
+</option>
 
-        <optgroup label="Income">
-          <option>Salary</option>
-          <option>Allowance</option>
-          <option>Freelance</option>
-        </optgroup>
+<option>Transportation</option>
+<option>Food</option>
+<option>Bills</option>
+<option>Shopping</option>
+<option>Health</option>
+<option>Education</option>
+<option>Other</option>
 
-        <optgroup label="Savings">
-          <option>Savings Deposit</option>
-          <option>Loan Payment</option>
-        </optgroup>
+</select>
 
-      </select>
+{category==="Other" && (
 
-      <input
-        type="number"
-        placeholder="Amount (£)"
-        value={amount}
-        onChange={(e)=>
-          setAmount(e.target.value)
-        }
-      />
+<input
+placeholder="Custom category"
+value={customCategory}
+onChange={(e)=>
+setCustomCategory(
+e.target.value
+)}
+/>
 
-      <button
-        onClick={addTransaction}
-      >
-        Add
-      </button>
+)}
 
-      <hr />
+<input
+type="date"
+value={date}
+onChange={(e)=>
+setDate(e.target.value)}
+/>
 
-      <h2>
-      📊 Financial Overview
-      </h2>
+<input
+type="number"
+placeholder="Amount (£)"
+value={amount}
+onChange={(e)=>
+setAmount(e.target.value)}
+/>
 
-      <p>
-      Income: £{totalIncome}
-      </p>
+<button
+onClick={addTransaction}
+>
+Add
+</button>
 
-      <p>
-      Expenses: £{totalExpense}
-      </p>
+<hr/>
 
-      <p>
-      Savings: £{totalSavings}
-      </p>
+<h2>
+📊 Financial Overview
+</h2>
 
-      <p>
-      Financial Health:
-      {financialHealth}/100
-      </p>
+<p>Income: £{totalIncome}</p>
+<p>Expense: £{totalExpense}</p>
+<p>Savings: £{totalSavings}</p>
 
-      <hr/>
+<p>
+Financial Health:
+{financialHealth}/100
+</p>
 
-      <h2>
-      🤖 Forecast &
-      Recommendation
-      </h2>
+<hr/>
 
-      <p>
-      Success Chance:
-      {financialHealth}%
-      </p>
+<h2>
+🤖 Forecast
+</h2>
 
-      <p>
-      AI Confidence:
-      {confidence}%
-      </p>
+<p>
+AI Confidence:
+{confidence}%
+</p>
 
-      <p>
-      Reality Score:
-      {realityScore}%
-      </p>
+<p>
+Validation:
+{validation}
+transactions
+</p>
 
-      <p>
-      Validation:
-      {validation}
-      transactions analyzed
-      </p>
+<p>
+Predicted Savings:
+£{predictedSavings}/month
+</p>
 
-      <p>
-      Predicted Savings:
-      £{predictedSavings}/month
-      </p>
+<hr/>
 
-      <p>
-      Time Horizon:
-      Next 30 days
-      </p>
+<h2>
+📈 Trends
+</h2>
 
-      <p>
-      Recommendation:
-      {recommendation}
-      </p>
+<p>
+Weekly Spend:
+£{weeklySpend}
+</p>
 
-      <hr/>
+<hr/>
 
-      <h2>
-      📈 Trends
-      </h2>
+<h2>
+📄 Transactions
+</h2>
 
-      <p>
-      Weekly Spend:
-      £{weeklySpend}
-      </p>
+<table
+border="1"
+width="100%"
+cellPadding="10"
+>
 
-      <p>
-      Monthly Spend:
-      £{totalExpense}
-      </p>
+<thead>
+<tr>
+<th>Date</th>
+<th>Type</th>
+<th>Category</th>
+<th>Amount</th>
+</tr>
+</thead>
 
-      <p>
-      Savings Rate:
-      {savingsRate}%
-      </p>
+<tbody>
 
-      <p>
-      Net Balance:
-      £{netBalance}
-      </p>
+{records.map(
+(item,index)=>(
 
-      <hr/>
+<tr key={index}>
+<td>{item.date}</td>
+<td>{item.type}</td>
+<td>{item.category}</td>
+<td>£{item.amount}</td>
+</tr>
 
-      <h2>
-      📄 Transactions
-      </h2>
+))}
 
-      <table
-      border="1"
-      cellPadding="10"
-      width="100%"
-      >
+</tbody>
 
-      <thead>
+</table>
 
-      <tr>
-      <th>Date</th>
-      <th>Type</th>
-      <th>Category</th>
-      <th>Amount</th>
-      </tr>
+<br/>
 
-      </thead>
+<button
+onClick={downloadReport}
+>
 
-      <tbody>
+⬇ Download Report
 
-      {records.map(
-      (item,index)=>(
-      <tr key={index}>
+</button>
 
-      <td>{item.date}</td>
-
-      <td>{item.type}</td>
-
-      <td>{item.category}</td>
-
-      <td>
-      £{item.amount}
-      </td>
-
-      </tr>
-
-      ))}
-
-      </tbody>
-
-      </table>
-
-      <br/>
-
-      <button
-      onClick={downloadReport}
-      >
-      ⬇ Download Report
-      </button>
-
-    </div>
-  );
-}
+</div>
+)}
