@@ -13,7 +13,7 @@ const [income,setIncome]=useState("");
 const [incomeType,setIncomeType]=useState("Salary");
 
 const [category,setCategory]=useState("Transportation");
-const [amount,setAmount]=useState("");
+const [expense,setExpense]=useState("");
 
 const [loanType,setLoanType]=useState("Student Loan");
 const [loanAmount,setLoanAmount]=useState("");
@@ -24,7 +24,9 @@ const [description,setDescription]=useState("");
 useEffect(()=>{
 
 const saved=
-localStorage.getItem("ai_transactions");
+localStorage.getItem(
+"ai_transactions"
+);
 
 if(saved){
 
@@ -37,34 +39,66 @@ JSON.parse(saved)
 },[]);
 
 
+
 function addTransaction(){
 
-if(!amount)return;
-
-const item={
+const record={
 
 id:Date.now(),
+
 date:selectedDate,
+
+income:Number(
+income||0
+),
+
 incomeType,
+
 category,
-amount:Number(amount),
+
+expense:Number(
+expense||0
+),
+
+loan:Number(
+loanAmount||0
+),
+
+loanType,
+
+goal:Number(
+savingGoal||0
+),
+
 description
 
 };
 
+
 const updated=[
-item,
+
+record,
 ...transactions
+
 ];
 
-setTransactions(updated);
 
-localStorage.setItem(
-"ai_transactions",
-JSON.stringify(updated)
+setTransactions(
+updated
 );
 
-setAmount("");
+localStorage.setItem(
+
+"ai_transactions",
+
+JSON.stringify(
+updated
+)
+
+);
+
+
+setExpense("");
 setDescription("");
 
 }
@@ -72,14 +106,38 @@ setDescription("");
 
 
 const totalIncome=
-Number(income||0);
+
+transactions.reduce(
+
+(sum,t)=>
+
+sum+
+t.income
+
+,0);
+
 
 const totalExpenses=
 
 transactions.reduce(
 
-(sum,item)=>
-sum+item.amount
+(sum,t)=>
+
+sum+
+t.expense
+
+,0);
+
+
+
+const totalLoan=
+
+transactions.reduce(
+
+(sum,t)=>
+
+sum+
+t.loan
 
 ,0);
 
@@ -88,60 +146,7 @@ const balance=
 
 totalIncome-
 totalExpenses-
-Number(
-loanAmount||0
-);
-
-
-
-function exportExcel(){
-
-const rows=[
-
-[
-"Date",
-"Income Type",
-"Category",
-"Expense",
-"Description"
-]
-
-];
-
-
-transactions.forEach(t=>{
-
-rows.push([
-
-t.date,
-t.incomeType,
-t.category,
-t.amount,
-t.description
-
-]);
-
-});
-
-const ws=
-XLSX.utils.aoa_to_sheet(rows);
-
-const wb=
-XLSX.utils.book_new();
-
-XLSX.utils.book_append_sheet(
-wb,
-ws,
-"Transactions"
-);
-
-XLSX.writeFile(
-wb,
-"MyDiaryReport.xlsx"
-);
-
-}
-
+totalLoan;
 
 
 const avg=
@@ -156,8 +161,11 @@ transactions.length
 :0;
 
 
-const monthly=
-Math.round(avg*30);
+const projected=
+
+Math.round(
+avg*30
+);
 
 
 const confidence=
@@ -188,7 +196,7 @@ recommendation=
 
 else if(
 
-monthly>
+projected>
 
 totalIncome*.8
 
@@ -218,17 +226,75 @@ savingGoal/
 balance
 )
 
-:"Unknown";
+:
+
+"Unknown";
 
 
 
-const inputStyle={
+function exportExcel(){
+
+const rows=[
+
+[
+"Date",
+"Income",
+"Expense",
+"Loan",
+"Category",
+"Description"
+]
+
+];
+
+
+transactions.forEach(t=>{
+
+rows.push([
+
+t.date,
+t.income,
+t.expense,
+t.loan,
+t.category,
+t.description
+
+]);
+
+});
+
+
+const ws=
+XLSX.utils.aoa_to_sheet(
+rows
+);
+
+const wb=
+XLSX.utils.book_new();
+
+XLSX.utils.book_append_sheet(
+wb,
+ws,
+"Transactions"
+);
+
+XLSX.writeFile(
+wb,
+"Transactions_Report.xlsx"
+);
+
+}
+
+
+
+const input={
 
 width:"100%",
-padding:"16px",
+padding:"15px",
+border:"1px solid #ddd",
 borderRadius:"18px",
-border:"1px solid #d1d5db",
-fontSize:"18px"
+fontSize:"16px",
+marginTop:"10px"
 
 };
 
@@ -237,17 +303,17 @@ fontSize:"18px"
 return(
 
 <div style={{
-background:"#F3F4F6",
-minHeight:"100vh",
+background:"#F4F6FB",
 padding:"30px",
+minHeight:"100vh",
 fontFamily:"Arial"
 }}>
 
 <div style={{
-background:"#091428",
-color:"white",
+background:"#081326",
 padding:"35px",
-borderRadius:"25px"
+borderRadius:"25px",
+color:"white"
 }}>
 
 <h1>
@@ -285,7 +351,7 @@ value:`£${totalExpenses}`
 
 {
 title:"🏦 Loan",
-value:`£${loanAmount||0}`
+value:`£${totalLoan}`
 },
 
 {
@@ -293,21 +359,26 @@ title:"💰 Balance",
 value:`£${balance}`
 }
 
-].map((item,i)=>(
+].map((card,i)=>(
 
 <div
 key={i}
-
 style={{
 background:"white",
 padding:"30px",
-borderRadius:"25px"
+borderRadius:"25px",
+boxShadow:
+"0 4px 10px rgba(0,0,0,.08)"
 }}
 >
 
-<h2>{item.title}</h2>
+<h2>
+{card.title}
+</h2>
 
-<h1>{item.value}</h1>
+<h1>
+{card.value}
+</h1>
 
 </div>
 
@@ -322,14 +393,13 @@ borderRadius:"25px"
 <div style={{
 background:"white",
 padding:"30px",
-borderRadius:"25px",
-marginTop:"30px"
-}}>
+marginTop:"30px",
+borderRadius:"25px"
+}}
+>
 
 <h1>
-
 ⚡ Daily Transaction Entry
-
 </h1>
 
 
@@ -337,8 +407,7 @@ marginTop:"30px"
 display:"grid",
 gridTemplateColumns:
 "repeat(4,1fr)",
-gap:"20px",
-marginTop:"20px"
+gap:"20px"
 }}
 >
 
@@ -354,7 +423,7 @@ onChange={(e)=>
 setIncome(
 e.target.value
 )}
-style={inputStyle}
+style={input}
 />
 
 
@@ -364,23 +433,12 @@ onChange={(e)=>
 setIncomeType(
 e.target.value
 )}
-style={{
-...inputStyle,
-marginTop:"10px"
-}}
+style={input}
 >
 
-<option>
-Salary
-</option>
-
-<option>
-Project
-</option>
-
-<option>
-Allowance
-</option>
+<option>Salary</option>
+<option>Project</option>
+<option>Allowance</option>
 
 </select>
 
@@ -398,39 +456,25 @@ onChange={(e)=>
 setCategory(
 e.target.value
 )}
-style={inputStyle}
+style={input}
 >
 
-<option>
-Transportation
-</option>
-
-<option>
-Food
-</option>
-
-<option>
-Bills
-</option>
-
-<option>
-Shopping
-</option>
+<option>Transportation</option>
+<option>Food</option>
+<option>Bills</option>
+<option>Shopping</option>
 
 </select>
 
 
 <input
 placeholder="Expense (£)"
-value={amount}
+value={expense}
 onChange={(e)=>
-setAmount(
+setExpense(
 e.target.value
 )}
-style={{
-...inputStyle,
-marginTop:"10px"
-}}
+style={input}
 />
 
 </div>
@@ -447,20 +491,12 @@ onChange={(e)=>
 setLoanType(
 e.target.value
 )}
-style={inputStyle}
+style={input}
 >
 
-<option>
-Student Loan
-</option>
-
-<option>
-Mortgage
-</option>
-
-<option>
-Credit Card
-</option>
+<option>Student Loan</option>
+<option>Mortgage</option>
+<option>Credit Card</option>
 
 </select>
 
@@ -472,10 +508,7 @@ onChange={(e)=>
 setLoanAmount(
 e.target.value
 )}
-style={{
-...inputStyle,
-marginTop:"10px"
-}}
+style={input}
 />
 
 </div>
@@ -493,7 +526,7 @@ onChange={(e)=>
 setSavingGoal(
 e.target.value
 )}
-style={inputStyle}
+style={input}
 />
 
 
@@ -504,14 +537,10 @@ onChange={(e)=>
 setDescription(
 e.target.value
 )}
-style={{
-...inputStyle,
-marginTop:"10px"
-}}
+style={input}
 />
 
 </div>
-
 
 </div>
 
@@ -531,25 +560,23 @@ onChange={(e)=>
 setSelectedDate(
 e.target.value
 )}
-
 style={{
-...inputStyle,
+...input,
 flex:1
 }}
 />
 
+
 <button
 onClick={addTransaction}
-
 style={{
-background:"#07152D",
+background:"#081326",
 color:"white",
-padding:"15px 50px",
-borderRadius:"20px",
 border:"none",
-fontWeight:"bold",
-fontSize:"18px",
-cursor:"pointer"
+padding:"15px 45px",
+borderRadius:"20px",
+cursor:"pointer",
+fontWeight:"bold"
 }}
 >
 
@@ -564,7 +591,7 @@ cursor:"pointer"
 
 
 <div style={{
-background:"#091428",
+background:"#081326",
 color:"white",
 padding:"30px",
 marginTop:"30px",
@@ -583,7 +610,7 @@ Expenses increasing from recent activity
 
 <p>
 Prediction:
-Projected monthly spending £{monthly}
+Projected monthly spending £{projected}
 </p>
 
 <p>
@@ -625,18 +652,71 @@ borderRadius:"25px"
 
 <button
 onClick={exportExcel}
-style={{
-background:"#0F766E",
-color:"white",
-padding:"12px 20px",
-border:"none",
-borderRadius:"10px"
-}}
 >
 
 ⬇ Download Report
 
 </button>
+
+<table
+width="100%"
+cellPadding="10"
+style={{
+marginTop:"20px"
+}}
+>
+
+<thead>
+
+<tr>
+
+<th>Date</th>
+<th>Expense</th>
+<th>Category</th>
+<th>Description</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{
+
+transactions.length===0
+
+?
+
+<tr>
+
+<td colSpan="4">
+
+No records
+
+</td>
+
+</tr>
+
+:
+
+transactions.map(t=>(
+
+<tr key={t.id}>
+
+<td>{t.date}</td>
+<td>£{t.expense}</td>
+<td>{t.category}</td>
+<td>{t.description}</td>
+
+</tr>
+
+))
+
+}
+
+</tbody>
+
+</table>
 
 </div>
 
