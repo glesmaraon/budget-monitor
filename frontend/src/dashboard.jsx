@@ -1,4 +1,4 @@
-import React,{useEffect,useState} from "react";
+import React,{useState,useEffect} from "react";
 import * as XLSX from "xlsx";
 
 export default function Dashboard(){
@@ -7,12 +7,36 @@ const [transactions,setTransactions]=useState([]);
 
 const [type,setType]=useState("Expense");
 const [category,setCategory]=useState("Transportation");
+
 const [amount,setAmount]=useState("");
-const [description,setDescription]=useState("");
+const [description,setDescription]=
+useState("");
+
+const [loanType,setLoanType]=
+useState("Student Loan");
+
+const [loanAmount,setLoanAmount]=
+useState("");
+
+const [income,setIncome]=
+useState("");
+
+const [savingGoal,setSavingGoal]=
+useState("");
+
+const [selectedDate,setSelectedDate]=
+useState(
+new Date()
+.toISOString()
+.split("T")[0]
+);
+
+
 
 useEffect(()=>{
 
 const saved=
+
 localStorage.getItem(
 "ai_transactions"
 );
@@ -38,9 +62,7 @@ const item={
 
 id:Date.now(),
 
-date:
-new Date()
-.toLocaleDateString(),
+date:selectedDate,
 
 time:
 new Date()
@@ -50,9 +72,12 @@ type,
 
 category,
 
-amount:Number(amount),
+amount:
+Number(amount),
 
-description
+description,
+
+loanType
 
 };
 
@@ -65,61 +90,91 @@ item,
 ];
 
 
-setTransactions(
-updated
-);
+setTransactions(updated);
 
 localStorage.setItem(
 
 "ai_transactions",
 
-JSON.stringify(
-updated)
+JSON.stringify(updated)
 
 );
 
-
 setAmount("");
+
 setDescription("");
 
 }
 
 
 
-const income=
+const totalIncome=
+
+Number(income||0)
+
++
 
 transactions
+
 .filter(
-t=>t.type==="Income"
+
+t=>
+
+t.type==="Income"
+
 )
+
 .reduce(
+
 (sum,t)=>
-sum+t.amount
-,0
+
+sum+t.amount,
+
+0
+
 );
 
 
-const expenses=
+
+const totalExpense=
 
 transactions
+
 .filter(
-t=>t.type==="Expense"
+
+t=>
+
+t.type==="Expense"
+
 )
+
 .reduce(
+
 (sum,t)=>
-sum+t.amount
-,0
+
+sum+t.amount,
+
+0
+
 );
+
 
 
 const balance=
-income-expenses;
+
+totalIncome
+-
+totalExpense
+-
+Number(
+loanAmount||0
+);
 
 
 
-const topCategory=()=>{
+function topHabit(){
 
-const categories={};
+const habits={};
 
 transactions.forEach(t=>{
 
@@ -127,76 +182,40 @@ if(
 t.type==="Expense"
 ){
 
-categories[
+habits[
 t.category
 ]
 
 =
 
 (
-categories[
+habits[
 t.category
 ]||0
 )
 
-+
-
-t.amount;
++t.amount;
 
 }
 
 });
 
-
 const top=
 
 Object.entries(
-categories
+habits
 )
 
 .sort(
 (a,b)=>
-
 b[1]-a[1]
-
 )[0];
-
 
 return top
 
 ?top[0]
 
-:"No data";
-
-};
-
-
-
-function recommendation(){
-
-if(balance<0){
-
-return "⚠ Spending exceeds income.";
-
-}
-
-if(
-
-topCategory()==="Transportation"
-
-){
-
-return "🚇 Transportation is your highest spending category.";
-
-}
-
-if(expenses>income*.7){
-
-return "📉 Spending is consuming most income.";
-
-}
-
-return "📈 Spending pattern currently stable.";
+:"No trend";
 
 }
 
@@ -208,16 +227,13 @@ if(
 transactions.length<5
 ){
 
-return
-"Need more records";
+return "AI needs more diary entries";
 
 }
 
+const average=
 
-const avg=
-
-expenses/
-
+totalExpense/
 transactions.length;
 
 
@@ -225,10 +241,78 @@ return
 
 `Predicted monthly spending:
 £${Math.round(
-avg*30
+average*30
 )}`;
 
 }
+
+
+
+function recommendation(){
+
+if(balance<0){
+
+return "⚠ Spending exceeds available balance.";
+
+}
+
+if(
+
+topHabit()==
+
+"Transportation"
+
+){
+
+return "🚇 Transportation dominates your diary spending.";
+
+}
+
+if(
+
+topHabit()==
+
+"Food"
+
+){
+
+return "🍜 Food spending trend increasing.";
+
+}
+
+if(
+
+Number(
+savingGoal
+)
+
+>
+
+balance
+
+){
+
+return "🎯 Goal may require increased savings.";
+
+}
+
+return "📈 Spending behavior currently stable.";
+
+}
+
+
+
+const confidence=
+
+transactions.length>15
+
+?95
+
+:transactions.length>7
+
+?88
+
+:70;
 
 
 
@@ -242,7 +326,8 @@ const rows=[
 "Type",
 "Category",
 "Amount",
-"Description"
+"Description",
+"Loan Type"
 ]
 
 ];
@@ -262,7 +347,9 @@ t.category,
 
 t.amount,
 
-t.description
+t.description,
+
+t.loanType
 
 ]);
 
@@ -285,12 +372,12 @@ XLSX.utils
 .book_append_sheet(
 wb,
 ws,
-"Transactions"
+"Diary"
 );
 
 XLSX.writeFile(
 wb,
-"AI_Transactions.xlsx"
+"MyDiaryHabitReport.xlsx"
 );
 
 }
@@ -301,30 +388,31 @@ return(
 
 <div
 style={{
+background:"#F4F7FB",
 padding:"30px",
-background:"#F5F7FB",
-minHeight:"100vh"
+minHeight:"100vh",
+fontFamily:"Arial"
 }}
 >
 
 <div
 style={{
 background:"#111827",
-color:"white",
 padding:"30px",
-borderRadius:"20px"
+borderRadius:"20px",
+color:"white"
 }}
 >
 
 <h1>
 
-🤖 AI Saving Companion
+📔 My Diary Habit Spending Analyzer
 
 </h1>
 
 <p>
 
-Track → Analyze → Predict → Improve
+Track → Learn → Analyze → Predict
 
 </p>
 
@@ -346,22 +434,22 @@ marginTop:"25px"
 
 {
 title:"💼 Income",
-value:`£${income}`
+value:`£${totalIncome}`
 },
 
 {
 title:"💸 Expenses",
-value:`£${expenses}`
+value:`£${totalExpense}`
+},
+
+{
+title:"🏦 Loan",
+value:`£${loanAmount||0}`
 },
 
 {
 title:"💰 Balance",
 value:`£${balance}`
-},
-
-{
-title:"🔥 Top Spend",
-value:topCategory()
 }
 
 ].map((card,i)=>(
@@ -371,16 +459,22 @@ key={i}
 style={{
 background:"white",
 padding:"25px",
-borderRadius:"18px"
+borderRadius:"18px",
+boxShadow:
+"0 4px 12px rgba(0,0,0,.08)"
 }}
 >
 
 <h3>
+
 {card.title}
+
 </h3>
 
 <h1>
+
 {card.value}
+
 </h1>
 
 </div>
@@ -397,8 +491,8 @@ borderRadius:"18px"
 style={{
 background:"white",
 padding:"25px",
-borderRadius:"20px",
-marginTop:"20px"
+marginTop:"20px",
+borderRadius:"20px"
 }}
 >
 
@@ -407,6 +501,24 @@ marginTop:"20px"
 ⚡ Transaction Entry
 
 </h2>
+
+<div
+style={{
+display:"grid",
+gridTemplateColumns:
+"repeat(auto-fit,minmax(220px,1fr))",
+gap:"12px"
+}}
+>
+
+<input
+type="date"
+value={selectedDate}
+onChange={(e)=>
+setSelectedDate(
+e.target.value
+)}
+/>
 
 <select
 value={type}
@@ -464,7 +576,7 @@ Project
 
 <input
 type="number"
-placeholder="Amount"
+placeholder="Amount (£)"
 value={amount}
 onChange={(e)=>
 setAmount(
@@ -483,6 +595,66 @@ e.target.value
 />
 
 
+<select
+value={loanType}
+onChange={(e)=>
+setLoanType(
+e.target.value
+)}
+>
+
+<option>
+Student Loan
+</option>
+
+<option>
+Credit Card
+</option>
+
+<option>
+Mortgage
+</option>
+
+<option>
+Personal Loan
+</option>
+
+</select>
+
+
+<input
+type="number"
+placeholder="Loan (£)"
+value={loanAmount}
+onChange={(e)=>
+setLoanAmount(
+e.target.value
+)}
+/>
+
+
+<input
+type="number"
+placeholder="Savings Goal (£)"
+value={savingGoal}
+onChange={(e)=>
+setSavingGoal(
+e.target.value
+)}
+/>
+
+
+<input
+type="number"
+placeholder="Base Income (£)"
+value={income}
+onChange={(e)=>
+setIncome(
+e.target.value
+)}
+/>
+
+
 <button
 onClick={addTransaction}
 >
@@ -493,14 +665,16 @@ Add Transaction
 
 </div>
 
+</div>
+
 
 
 <div
 style={{
 background:"white",
 padding:"25px",
-borderRadius:"20px",
-marginTop:"20px"
+marginTop:"20px",
+borderRadius:"20px"
 }}
 >
 
@@ -511,24 +685,23 @@ marginTop:"20px"
 </h2>
 
 <p>
-
-Top habit:
-{topCategory()}
-
+Habit:
+{topHabit()}
 </p>
 
 <p>
-
 Forecast:
 {forecast()}
-
 </p>
 
 <p>
-
 Recommendation:
 {recommendation()}
+</p>
 
+<p>
+Confidence:
+{confidence}%
 </p>
 
 </div>
@@ -539,8 +712,8 @@ Recommendation:
 style={{
 background:"white",
 padding:"25px",
-borderRadius:"20px",
-marginTop:"20px"
+marginTop:"20px",
+borderRadius:"20px"
 }}
 >
 
