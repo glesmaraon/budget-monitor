@@ -1,530 +1,433 @@
-import React, { useState, useEffect } from "react";
+// Keep your existing imports
+import React,{useState,useEffect} from "react";
 import * as XLSX from "xlsx";
 
-export default function Dashboard() {
-  const [transactions, setTransactions] = useState([]);
-
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-
-  const [type, setType] = useState("Expense");
-  const [category, setCategory] = useState("Transportation");
-  const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("");
+export default function Dashboard(){
 
-  const [income, setIncome] = useState("");
-  const [loanType, setLoanType] = useState("Student Loan");
-  const [loanAmount, setLoanAmount] = useState("");
-  const [savingGoal, setSavingGoal] = useState("");
+const [transactions,setTransactions]=useState([]);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("ai_transactions");
+const [selectedDate,setSelectedDate]=useState(
+new Date().toISOString().split("T")[0]
+);
 
-    if (saved) {
-      setTransactions(JSON.parse(saved));
-    }
-  }, []);
+const [type,setType]=useState("Expense");
+const [category,setCategory]=useState("Transportation");
+const [amount,setAmount]=useState("");
+const [description,setDescription]=useState("");
 
-  function addTransaction() {
-    if (!amount) return;
+const [income,setIncome]=useState("");
+const [loanType,setLoanType]=useState("Student Loan");
+const [loanAmount,setLoanAmount]=useState("");
+const [savingGoal,setSavingGoal]=useState("");
 
-    const newItem = {
-      id: Date.now(),
-      date: selectedDate,
-      type,
-      category,
-      amount: Number(amount),
-      description
-    };
+useEffect(()=>{
 
-    const updated = [newItem, ...transactions];
+const saved=
+localStorage.getItem("ai_transactions");
 
-    setTransactions(updated);
+if(saved){
 
-    localStorage.setItem(
-      "ai_transactions",
-      JSON.stringify(updated)
-    );
+setTransactions(
+JSON.parse(saved)
+);
 
-    setAmount("");
-    setDescription("");
-  }
+}
 
-  const totalIncome =
-    Number(income || 0) +
-    transactions
-      .filter(t => t.type === "Income")
-      .reduce((a, b) => a + b.amount, 0);
+},[]);
 
-  const totalExpenses =
-    transactions
-      .filter(t => t.type === "Expense")
-      .reduce((a, b) => a + b.amount, 0);
 
-  const balance =
-    totalIncome -
-    totalExpenses -
-    Number(loanAmount || 0);
+function addTransaction(){
 
-  function topHabit() {
-    const groups = {};
+if(!amount)return;
 
-    transactions.forEach(t => {
-      if (t.type === "Expense") {
-        groups[t.category] =
-          (groups[t.category] || 0)
-          + t.amount;
-      }
-    });
+const item={
 
-    const sorted =
-      Object.entries(groups)
-      .sort((a,b)=>b[1]-a[1]);
+id:Date.now(),
+date:selectedDate,
+type,
+category,
+amount:Number(amount),
+description
 
-    return sorted.length
-      ? sorted[0][0]
-      : "No data";
-  }
+};
 
-  function forecast() {
+const updated=[
+item,
+...transactions
+];
 
-    if(transactions.length<5){
+setTransactions(updated);
 
-      return "AI needs more diary entries";
-    }
+localStorage.setItem(
+"ai_transactions",
+JSON.stringify(updated)
+);
 
-    const average =
-      totalExpenses /
-      transactions.length;
+setAmount("");
+setDescription("");
 
-    return `Predicted monthly spending: £${Math.round(
-      average * 30
-    )}`;
-  }
+}
 
-  function recommendation(){
 
-    if(balance<0){
+const totalIncome=
+Number(income||0)+
+transactions
+.filter(t=>t.type==="Income")
+.reduce((a,b)=>a+b.amount,0);
 
-      return "⚠ Overspending detected. Reduce optional spending.";
 
-    }
+const totalExpenses=
+transactions
+.filter(t=>t.type==="Expense")
+.reduce((a,b)=>a+b.amount,0);
 
-    if(topHabit()==="Transportation"){
 
-      return "🚇 Transportation is your strongest spending habit.";
+const balance=
+totalIncome-
+totalExpenses-
+Number(loanAmount||0);
 
-    }
 
-    if(topHabit()==="Food"){
+function topHabit(){
 
-      return "🍜 Food spending trend increasing.";
+const habits={};
 
-    }
+transactions.forEach(t=>{
 
-    if(Number(savingGoal)>balance){
+if(t.type==="Expense"){
 
-      return "🎯 Current savings goal may be difficult at present spending.";
+habits[t.category]=
+(habits[t.category]||0)
++t.amount;
 
-    }
+}
 
-    return "📈 Spending behavior currently stable.";
-  }
+});
 
-  function exportExcel(){
+const top=
+Object.entries(habits)
+.sort((a,b)=>b[1]-a[1])[0];
 
-    const rows=[
-      [
-        "Date",
-        "Type",
-        "Category",
-        "Amount",
-        "Description"
-      ]
-    ];
+return top?top[0]:"No data";
 
-    transactions.forEach(item=>{
+}
 
-      rows.push([
-
-        item.date,
-        item.type,
-        item.category,
-        item.amount,
-        item.description
 
-      ]);
+function forecast(){
 
-    });
+if(transactions.length<5){
 
-    const ws =
-      XLSX.utils.aoa_to_sheet(rows);
+return "AI needs more diary entries";
 
-    const wb =
-      XLSX.utils.book_new();
+}
 
-    XLSX.utils.book_append_sheet(
-      wb,
-      ws,
-      "Transactions"
-    );
+const avg=
+totalExpenses/
+transactions.length;
 
-    XLSX.writeFile(
-      wb,
-      "Diary_Report.xlsx"
-    );
+return `Monthly prediction: £${Math.round(avg*30)}`;
 
-  }
+}
 
-  return (
-    <div
-      style={{
-        background:"#F3F6FB",
-        minHeight:"100vh",
-        padding:"25px",
-        fontFamily:"Arial"
-      }}
-    >
 
-      <div
-        style={{
-          background:"#111827",
-          color:"white",
-          padding:"30px",
-          borderRadius:"20px"
-        }}
-      >
-
-        <h1>
-          📔 My Diary Habit Spending Analyzer
-        </h1>
-
-        <p>
-          Track • Analyze • Predict • Improve
-        </p>
-
-      </div>
-
-
-      <div
-        style={{
-          display:"grid",
-          gridTemplateColumns:
-          "repeat(4,1fr)",
-          gap:"20px",
-          marginTop:"25px"
-        }}
-      >
-
-      {[
-        {
-          title:"💼 Income",
-          value:`£${totalIncome}`
-        },
-        {
-          title:"💸 Expenses",
-          value:`£${totalExpenses}`
-        },
-        {
-          title:"🏦 Loan",
-          value:`£${loanAmount||0}`
-        },
-        {
-          title:"💰 Balance",
-          value:`£${balance}`
-        }
-
-      ].map((card,index)=>(
-
-      <div
-      key={index}
-      style={{
-        background:"white",
-        padding:"35px",
-        borderRadius:"20px",
-        boxShadow:
-        "0 4px 12px rgba(0,0,0,.08)"
-      }}
-      >
-
-      <h2>{card.title}</h2>
-
-      <h1>
-      {card.value}
-      </h1>
-
-      </div>
-
-      ))}
-
-      </div>
-
-
-      <div
-      style={{
-        background:"white",
-        marginTop:"25px",
-        padding:"30px",
-        borderRadius:"20px"
-      }}
-      >
-
-      <h1>
-      ⚡ Transaction Entry
-      </h1>
-
-
-      <div
-      style={{
-      display:"grid",
-      gridTemplateColumns:
-      "repeat(4,1fr)",
-      gap:"15px",
-      marginTop:"20px"
-      }}
-      >
-
-      <input
-      type="date"
-      value={selectedDate}
-      onChange={(e)=>
-      setSelectedDate(
-      e.target.value
-      )}
-      />
-
-      <select
-      value={type}
-      onChange={(e)=>
-      setType(
-      e.target.value
-      )}
-      >
-      <option>Expense</option>
-      <option>Income</option>
-      </select>
-
-
-      <select
-      value={category}
-      onChange={(e)=>
-      setCategory(
-      e.target.value
-      )}
-      >
-      <option>Transportation</option>
-      <option>Food</option>
-      <option>Bills</option>
-      <option>Shopping</option>
-      <option>Salary</option>
-      <option>Project</option>
-      </select>
-
-
-      <input
-      type="number"
-      placeholder="Amount (£)"
-      value={amount}
-      onChange={(e)=>
-      setAmount(
-      e.target.value
-      )}
-      />
-
-
-      <input
-      placeholder="Description"
-      value={description}
-      onChange={(e)=>
-      setDescription(
-      e.target.value
-      )}
-      />
-
-
-      <select
-      value={loanType}
-      onChange={(e)=>
-      setLoanType(
-      e.target.value
-      )}
-      >
-      <option>Student Loan</option>
-      <option>Mortgage</option>
-      <option>Credit Card</option>
-      <option>Personal Loan</option>
-      </select>
-
-
-      <input
-      placeholder="Loan (£)"
-      value={loanAmount}
-      onChange={(e)=>
-      setLoanAmount(
-      e.target.value
-      )}
-      />
-
-
-      <input
-      placeholder="Savings Goal (£)"
-      value={savingGoal}
-      onChange={(e)=>
-      setSavingGoal(
-      e.target.value
-      )}
-      />
-
-      </div>
-
-
-      <input
-      style={{
-      width:"100%",
-      marginTop:"15px",
-      padding:"12px"
-      }}
-      placeholder="Base Income (£)"
-      value={income}
-      onChange={(e)=>
-      setIncome(
-      e.target.value
-      )}
-      />
-
-
-      <div
-      style={{
-      display:"flex",
-      justifyContent:"center",
-      marginTop:"20px"
-      }}
-      >
-
-      <button
-      onClick={addTransaction}
-      style={{
-      background:"#111827",
-      color:"white",
-      border:"none",
-      borderRadius:"12px",
-      padding:"15px 50px",
-      cursor:"pointer"
-      }}
-      >
-
-      + Add Transaction
-
-      </button>
-
-      </div>
-
-      </div>
-
-
-      <div
-      style={{
-      background:"white",
-      marginTop:"25px",
-      padding:"25px",
-      borderRadius:"20px"
-      }}
-      >
-
-      <h2>🤖 AI Analysis</h2>
-
-      <p><b>Habit:</b> {topHabit()}</p>
-
-      <p><b>Forecast:</b> {forecast()}</p>
-
-      <p><b>Recommendation:</b> {recommendation()}</p>
-
-      </div>
-
-
-      <div
-      style={{
-      background:"white",
-      marginTop:"25px",
-      padding:"25px",
-      borderRadius:"20px"
-      }}
-      >
-
-      <button
-      onClick={exportExcel}
-      style={{
-      background:"#0F766E",
-      color:"white",
-      border:"none",
-      padding:"12px",
-      borderRadius:"10px"
-      }}
-      >
-
-      ⬇ Download Report
-
-      </button>
-
-
-      <table
-      width="100%"
-      border="1"
-      cellPadding="10"
-      style={{
-      marginTop:"20px"
-      }}
-      >
-
-      <thead>
-
-      <tr>
-      <th>Date</th>
-      <th>Type</th>
-      <th>Category</th>
-      <th>Amount</th>
-      <th>Description</th>
-      </tr>
-
-      </thead>
-
-      <tbody>
-
-      {transactions.length===0?
-
-      <tr>
-
-      <td colSpan="5">
-      No records available
-      </td>
-
-      </tr>
-
-      :
-
-      transactions.map(item=>(
-
-      <tr key={item.id}>
-
-      <td>{item.date}</td>
-      <td>{item.type}</td>
-      <td>{item.category}</td>
-      <td>£{item.amount}</td>
-      <td>{item.description}</td>
-
-      </tr>
-
-      ))
-
-      }
-
-      </tbody>
-
-      </table>
-
-      </div>
-
-    </div>
-  );
+function recommendation(){
+
+if(balance<0){
+
+return "⚠ Spending exceeds balance";
+
+}
+
+if(topHabit()==="Transportation"){
+
+return "🚇 Transportation dominates spending";
+
+}
+
+return "📈 Spending stable";
+
+}
+
+
+function exportExcel(){
+
+const rows=[
+
+["Date","Type","Category","Amount","Description"]
+
+];
+
+transactions.forEach(t=>{
+
+rows.push([
+
+t.date,
+t.type,
+t.category,
+t.amount,
+t.description
+
+]);
+
+});
+
+const ws=
+XLSX.utils.aoa_to_sheet(rows);
+
+const wb=
+XLSX.utils.book_new();
+
+XLSX.utils.book_append_sheet(
+wb,
+ws,
+"Diary"
+);
+
+XLSX.writeFile(
+wb,
+"MyDiaryReport.xlsx"
+);
+
+}
+
+
+return(
+
+<div style={{
+padding:"30px",
+background:"#F4F7FB",
+minHeight:"100vh"
+}}>
+
+<h1>
+📔 My Diary Habit Spending Analyzer
+</h1>
+
+
+<div style={{
+display:"grid",
+gridTemplateColumns:"repeat(4,1fr)",
+gap:"20px"
+}}>
+
+{[
+
+{
+title:"💼 Income",
+value:`£${totalIncome}`
+},
+
+{
+title:"💸 Expenses",
+value:`£${totalExpenses}`
+},
+
+{
+title:"🏦 Loan",
+value:`£${loanAmount||0}`
+},
+
+{
+title:"💰 Balance",
+value:`£${balance}`
+}
+
+].map((card,index)=>(
+
+<div
+key={index}
+style={{
+background:"white",
+padding:"25px",
+borderRadius:"20px"
+}}
+>
+
+<h3>{card.title}</h3>
+<h1>{card.value}</h1>
+
+</div>
+
+))}
+
+</div>
+
+
+<div
+style={{
+background:"white",
+padding:"30px",
+marginTop:"20px",
+borderRadius:"20px"
+}}
+>
+
+<h2>
+⚡ Daily Transaction Entry
+</h2>
+
+
+<div
+style={{
+display:"grid",
+gridTemplateColumns:"repeat(4,1fr)",
+gap:"20px"
+}}
+>
+
+<div>
+
+<h3>💼 Income</h3>
+
+<input
+placeholder="Income (£)"
+value={income}
+onChange={(e)=>setIncome(e.target.value)}
+style={{width:"100%"}}
+/>
+
+<select
+value={type}
+onChange={(e)=>setType(e.target.value)}
+style={{width:"100%"}}
+>
+
+<option>Income</option>
+<option>Expense</option>
+
+</select>
+
+</div>
+
+
+<div>
+
+<h3>💸 Expenses</h3>
+
+<select
+value={category}
+onChange={(e)=>setCategory(e.target.value)}
+style={{width:"100%"}}
+>
+
+<option>Transportation</option>
+<option>Food</option>
+<option>Bills</option>
+<option>Shopping</option>
+
+</select>
+
+<input
+placeholder="Expense (£)"
+value={amount}
+onChange={(e)=>setAmount(e.target.value)}
+style={{width:"100%"}}
+/>
+
+</div>
+
+
+<div>
+
+<h3>🏦 Loan</h3>
+
+<select
+value={loanType}
+onChange={(e)=>setLoanType(e.target.value)}
+style={{width:"100%"}}
+>
+
+<option>Student Loan</option>
+<option>Credit Card</option>
+
+</select>
+
+<input
+placeholder="Loan (£)"
+value={loanAmount}
+onChange={(e)=>setLoanAmount(e.target.value)}
+style={{width:"100%"}}
+/>
+
+</div>
+
+
+<div>
+
+<h3>💰 Goal</h3>
+
+<input
+placeholder="Savings Goal"
+value={savingGoal}
+onChange={(e)=>setSavingGoal(e.target.value)}
+style={{width:"100%"}}
+/>
+
+<input
+placeholder="Description"
+value={description}
+onChange={(e)=>setDescription(e.target.value)}
+style={{width:"100%"}}
+/>
+
+</div>
+
+</div>
+
+
+<div style={{
+display:"flex",
+justifyContent:"space-between",
+marginTop:"25px"
+}}>
+
+<input
+type="date"
+value={selectedDate}
+onChange={(e)=>setSelectedDate(e.target.value)}
+/>
+
+<button
+onClick={addTransaction}
+>
+
++ Add Transaction
+
+</button>
+
+</div>
+
+</div>
+
+
+<div
+style={{
+background:"white",
+padding:"25px",
+marginTop:"20px"
+}}
+>
+
+<h2>🤖 AI Analysis</h2>
+
+<p>Habit: {topHabit()}</p>
+
+<p>Forecast: {forecast()}</p>
+
+<p>Recommendation: {recommendation()}</p>
+
+<button
+onClick={exportExcel}
+>
+
+⬇ Download Report
+
+</button>
+
+</div>
+
+</div>
+
+)
+
 }
