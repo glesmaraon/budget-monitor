@@ -9,15 +9,17 @@ const [selectedDate,setSelectedDate]=useState(
 new Date().toISOString().split("T")[0]
 );
 
-const [type,setType]=useState("Expense");
+const [income,setIncome]=useState("");
+const [incomeType,setIncomeType]=useState("Salary");
+
 const [category,setCategory]=useState("Transportation");
 const [amount,setAmount]=useState("");
-const [description,setDescription]=useState("");
 
-const [income,setIncome]=useState("");
 const [loanType,setLoanType]=useState("Student Loan");
 const [loanAmount,setLoanAmount]=useState("");
+
 const [savingGoal,setSavingGoal]=useState("");
+const [description,setDescription]=useState("");
 
 useEffect(()=>{
 
@@ -25,7 +27,11 @@ const saved=
 localStorage.getItem("ai_transactions");
 
 if(saved){
-setTransactions(JSON.parse(saved));
+
+setTransactions(
+JSON.parse(saved)
+);
+
 }
 
 },[]);
@@ -39,7 +45,7 @@ const item={
 
 id:Date.now(),
 date:selectedDate,
-type,
+incomeType,
 category,
 amount:Number(amount),
 description
@@ -64,77 +70,94 @@ setDescription("");
 }
 
 
+
 const totalIncome=
-Number(income||0)+
-transactions
-.filter(
-t=>t.type==="Income"
-)
-.reduce(
-(a,b)=>a+b.amount,0
-);
+Number(income||0);
 
 const totalExpenses=
-transactions
-.filter(
-t=>t.type==="Expense"
-)
-.reduce(
-(a,b)=>a+b.amount,0
-);
+
+transactions.reduce(
+
+(sum,item)=>
+sum+item.amount
+
+,0);
+
 
 const balance=
+
 totalIncome-
 totalExpenses-
-Number(loanAmount||0);
+Number(
+loanAmount||0
+);
 
 
-function forecast(){
 
-if(transactions.length<5){
+function exportExcel(){
 
-return "AI is learning from your entries";
+const rows=[
+
+[
+"Date",
+"Income Type",
+"Category",
+"Expense",
+"Description"
+]
+
+];
+
+
+transactions.forEach(t=>{
+
+rows.push([
+
+t.date,
+t.incomeType,
+t.category,
+t.amount,
+t.description
+
+]);
+
+});
+
+const ws=
+XLSX.utils.aoa_to_sheet(rows);
+
+const wb=
+XLSX.utils.book_new();
+
+XLSX.utils.book_append_sheet(
+wb,
+ws,
+"Transactions"
+);
+
+XLSX.writeFile(
+wb,
+"MyDiaryReport.xlsx"
+);
 
 }
+
+
 
 const avg=
 
+transactions.length
+
+?
+
 totalExpenses/
-transactions.length;
+transactions.length
 
-return `Projected monthly spending: £${Math.round(avg*30)}`;
-
-}
+:0;
 
 
-function aiRecommendation(){
-
-const projected=
-Math.round(
-(totalExpenses/
-Math.max(
-transactions.length,1
-))*30
-);
-
-if(balance<0){
-
-return "Reduce optional expenses immediately.";
-
-}
-
-if(
-projected>
-totalIncome*.8
-){
-
-return "Spending trend consuming most income.";
-
-}
-
-return "Current spending trend is stable.";
-
-}
+const monthly=
+Math.round(avg*30);
 
 
 const confidence=
@@ -154,105 +177,97 @@ transactions.length>20
 :65;
 
 
+let recommendation="";
 
-function exportExcel(){
+if(balance<0){
 
-const rows=[
-
-["Date","Type","Category","Amount","Description"]
-
-];
-
-transactions.forEach(t=>{
-
-rows.push([
-
-t.date,
-t.type,
-t.category,
-t.amount,
-t.description
-
-]);
-
-});
-
-
-const ws=
-XLSX.utils.aoa_to_sheet(rows);
-
-const wb=
-XLSX.utils.book_new();
-
-XLSX.utils.book_append_sheet(
-wb,
-ws,
-"Transactions"
-);
-
-XLSX.writeFile(
-wb,
-"AI_Diary_Report.xlsx"
-);
+recommendation=
+"Reduce daily spending by £5";
 
 }
+
+else if(
+
+monthly>
+
+totalIncome*.8
+
+){
+
+recommendation=
+"Reduce optional spending.";
+
+}
+
+else{
+
+recommendation=
+"Current spending pattern sustainable";
+
+}
+
+
+const months=
+
+savingGoal && balance>0
+
+?
+
+Math.ceil(
+savingGoal/
+balance
+)
+
+:"Unknown";
 
 
 
 const inputStyle={
 
 width:"100%",
-padding:"12px",
-borderRadius:"12px",
+padding:"16px",
+borderRadius:"18px",
 border:"1px solid #d1d5db",
-marginTop:"8px",
-fontSize:"14px"
+fontSize:"18px"
 
 };
 
 
+
 return(
 
-<div
-style={{
-background:"#F3F6FB",
+<div style={{
+background:"#F3F4F6",
 minHeight:"100vh",
 padding:"30px",
 fontFamily:"Arial"
-}}
->
+}}>
 
-<div
-style={{
-background:"#111827",
-padding:"35px",
-borderRadius:"24px",
+<div style={{
+background:"#091428",
 color:"white",
-marginBottom:"25px"
-}}
->
+padding:"35px",
+borderRadius:"25px"
+}}>
 
 <h1>
-
 🤖 AI Saving Companion
-
 </h1>
 
 <p>
-
 Track • Analyze • Predict • Improve
-
 </p>
 
 </div>
 
 
-<div
-style={{
+
+<div style={{
 display:"grid",
 gridTemplateColumns:
-"repeat(auto-fit,minmax(220px,1fr))",
-gap:"20px"
+"repeat(4,1fr)",
+gap:"20px",
+marginTop:"25px"
 }}
 >
 
@@ -278,22 +293,21 @@ title:"💰 Balance",
 value:`£${balance}`
 }
 
-].map((card,i)=>(
+].map((item,i)=>(
 
 <div
 key={i}
+
 style={{
 background:"white",
-padding:"25px",
-borderRadius:"20px",
-boxShadow:
-"0 5px 15px rgba(0,0,0,.08)"
+padding:"30px",
+borderRadius:"25px"
 }}
 >
 
-<h3>{card.title}</h3>
+<h2>{item.title}</h2>
 
-<h1>{card.value}</h1>
+<h1>{item.value}</h1>
 
 </div>
 
@@ -305,26 +319,21 @@ boxShadow:
 
 
 
-<div
-style={{
+<div style={{
 background:"white",
 padding:"30px",
-borderRadius:"20px",
-marginTop:"25px",
-boxShadow:
-"0 5px 15px rgba(0,0,0,.08)"
-}}
->
+borderRadius:"25px",
+marginTop:"30px"
+}}>
 
-<h2>
+<h1>
 
 ⚡ Daily Transaction Entry
 
-</h2>
+</h1>
 
 
-<div
-style={{
+<div style={{
 display:"grid",
 gridTemplateColumns:
 "repeat(4,1fr)",
@@ -333,25 +342,45 @@ marginTop:"20px"
 }}
 >
 
+
 <div>
 
-<h4>💼 Income</h4>
+<h3>💼 Income</h3>
 
 <input
 placeholder="Base Income (£)"
 value={income}
-onChange={(e)=>setIncome(e.target.value)}
+onChange={(e)=>
+setIncome(
+e.target.value
+)}
 style={inputStyle}
 />
 
+
 <select
-value={type}
-onChange={(e)=>setType(e.target.value)}
-style={inputStyle}
+value={incomeType}
+onChange={(e)=>
+setIncomeType(
+e.target.value
+)}
+style={{
+...inputStyle,
+marginTop:"10px"
+}}
 >
 
-<option>Income</option>
-<option>Expense</option>
+<option>
+Salary
+</option>
+
+<option>
+Project
+</option>
+
+<option>
+Allowance
+</option>
 
 </select>
 
@@ -361,27 +390,47 @@ style={inputStyle}
 
 <div>
 
-<h4>💸 Expenses</h4>
+<h3>💸 Expenses</h3>
 
 <select
 value={category}
-onChange={(e)=>setCategory(e.target.value)}
+onChange={(e)=>
+setCategory(
+e.target.value
+)}
 style={inputStyle}
 >
 
-<option>Transportation</option>
-<option>Food</option>
-<option>Bills</option>
-<option>Shopping</option>
-<option>Travel</option>
+<option>
+Transportation
+</option>
+
+<option>
+Food
+</option>
+
+<option>
+Bills
+</option>
+
+<option>
+Shopping
+</option>
 
 </select>
+
 
 <input
 placeholder="Expense (£)"
 value={amount}
-onChange={(e)=>setAmount(e.target.value)}
-style={inputStyle}
+onChange={(e)=>
+setAmount(
+e.target.value
+)}
+style={{
+...inputStyle,
+marginTop:"10px"
+}}
 />
 
 </div>
@@ -390,26 +439,43 @@ style={inputStyle}
 
 <div>
 
-<h4>🏦 Loan</h4>
+<h3>🏦 Loan</h3>
 
 <select
 value={loanType}
-onChange={(e)=>setLoanType(e.target.value)}
+onChange={(e)=>
+setLoanType(
+e.target.value
+)}
 style={inputStyle}
 >
 
-<option>Student Loan</option>
-<option>Credit Card</option>
-<option>Mortgage</option>
-<option>Personal Loan</option>
+<option>
+Student Loan
+</option>
+
+<option>
+Mortgage
+</option>
+
+<option>
+Credit Card
+</option>
 
 </select>
+
 
 <input
 placeholder="Loan (£)"
 value={loanAmount}
-onChange={(e)=>setLoanAmount(e.target.value)}
-style={inputStyle}
+onChange={(e)=>
+setLoanAmount(
+e.target.value
+)}
+style={{
+...inputStyle,
+marginTop:"10px"
+}}
 />
 
 </div>
@@ -418,32 +484,42 @@ style={inputStyle}
 
 <div>
 
-<h4>💰 Goal</h4>
+<h3>💰 Goal</h3>
 
 <input
 placeholder="Savings Goal (£)"
 value={savingGoal}
-onChange={(e)=>setSavingGoal(e.target.value)}
+onChange={(e)=>
+setSavingGoal(
+e.target.value
+)}
 style={inputStyle}
 />
+
 
 <input
 placeholder="Description"
 value={description}
-onChange={(e)=>setDescription(e.target.value)}
-style={inputStyle}
+onChange={(e)=>
+setDescription(
+e.target.value
+)}
+style={{
+...inputStyle,
+marginTop:"10px"
+}}
 />
 
 </div>
 
+
 </div>
 
 
-<div
-style={{
+
+<div style={{
 display:"flex",
-justifyContent:"space-between",
-alignItems:"center",
+gap:"20px",
 marginTop:"25px"
 }}
 >
@@ -451,20 +527,28 @@ marginTop:"25px"
 <input
 type="date"
 value={selectedDate}
-onChange={(e)=>setSelectedDate(e.target.value)}
-style={inputStyle}
-/>
+onChange={(e)=>
+setSelectedDate(
+e.target.value
+)}
 
+style={{
+...inputStyle,
+flex:1
+}}
+/>
 
 <button
 onClick={addTransaction}
+
 style={{
-background:"#111827",
+background:"#07152D",
 color:"white",
-padding:"14px 40px",
+padding:"15px 50px",
+borderRadius:"20px",
 border:"none",
-borderRadius:"14px",
 fontWeight:"bold",
+fontSize:"18px",
 cursor:"pointer"
 }}
 >
@@ -479,31 +563,47 @@ cursor:"pointer"
 
 
 
-<div
-style={{
-background:"white",
-padding:"25px",
-borderRadius:"20px",
-marginTop:"25px",
-boxShadow:
-"0 5px 15px rgba(0,0,0,.08)"
+<div style={{
+background:"#091428",
+color:"white",
+padding:"30px",
+marginTop:"30px",
+borderRadius:"25px"
 }}
 >
 
 <h2>
-
 🤖 AI Forecast & Recommendation
-
 </h2>
 
 <p>
 Trend:
-{forecast()}
+Expenses increasing from recent activity
+</p>
+
+<p>
+Prediction:
+Projected monthly spending £{monthly}
 </p>
 
 <p>
 Recommendation:
-{aiRecommendation()}
+{recommendation}
+</p>
+
+<p>
+Savings Goal:
+{
+months==="Unknown"
+
+?
+
+"Need more history"
+
+:
+
+`Estimated completion ${months} months`
+}
 </p>
 
 <p>
@@ -515,12 +615,11 @@ AI Confidence:
 
 
 
-<div
-style={{
+<div style={{
 background:"white",
 padding:"25px",
-borderRadius:"20px",
-marginTop:"25px"
+marginTop:"30px",
+borderRadius:"25px"
 }}
 >
 
@@ -529,62 +628,15 @@ onClick={exportExcel}
 style={{
 background:"#0F766E",
 color:"white",
-padding:"12px",
+padding:"12px 20px",
 border:"none",
-borderRadius:"12px"
+borderRadius:"10px"
 }}
 >
 
 ⬇ Download Report
 
 </button>
-
-
-<table
-width="100%"
-cellPadding="10"
-style={{
-marginTop:"20px"
-}}
->
-
-<thead>
-
-<tr>
-
-<th>Date</th>
-<th>Type</th>
-<th>Category</th>
-<th>Amount</th>
-<th>Description</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{
-
-transactions.map(t=>(
-
-<tr key={t.id}>
-
-<td>{t.date}</td>
-<td>{t.type}</td>
-<td>{t.category}</td>
-<td>£{t.amount}</td>
-<td>{t.description}</td>
-
-</tr>
-
-))
-
-}
-
-</tbody>
-
-</table>
 
 </div>
 
