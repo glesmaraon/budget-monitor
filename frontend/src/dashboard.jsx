@@ -781,7 +781,6 @@ marginTop:"20px"
 <th>Type</th>
 <th>Category</th>
 <th>Amount</th>
-<th>Goal</th>
 <th>Description</th>
 
 </tr>
@@ -817,7 +816,6 @@ transactions.map(t=>(
 <td>{t.type}</td>
 <td>{t.category}</td>
 <td>£{t.amount}</td>
-<td>£{t.goal}</td>
 <td>{t.description}</td>
 
 </tr>
