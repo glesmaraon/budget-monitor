@@ -1,66 +1,152 @@
+import { useState } from "react";
+
 export default function Dashboard() {
-  return (
-    <div style={{padding:"30px"}}>
 
-      <h1>💰 Gliza Personal Financial Monitoring System</h1>
+const [category,setCategory]=useState("");
+const [amount,setAmount]=useState("");
 
-      <h3>
-      Welcome back! You're building healthy financial habits.
-      </h3>
+const [expenses,setExpenses]=useState([]);
 
-      <hr/>
+const addExpense=()=>{
 
-      <h2>📊 Financial Overview</h2>
+if(!amount) return;
 
-      <p>Financial Health: 88/100</p>
+const newExpense={
 
-      <p>Success Chance: 84%</p>
+date:new Date().toLocaleDateString(),
 
-      <p>AI Confidence: 78%</p>
+category,
 
-      <p>Reality Score: 70%</p>
+amount
 
-      <p>Validation: 90 transactions analyzed</p>
+};
 
-      <hr/>
+setExpenses([
+...expenses,
+newExpense
+]);
 
-      <h2>🤖 Forecast & Recommendation</h2>
+setCategory("");
+setAmount("");
 
-      <p>
-      Predicted Savings:
-      £260/month
-      </p>
+};
 
-      <p>
-      Time Horizon:
-      Next 30 days
-      </p>
+return(
 
-      <p>
-      Daily Save:
-      £5/day
-      </p>
+<div style={{padding:"30px"}}>
 
-      <p>
-      Recommendation:
-      Save £5/day to improve success chance
-      </p>
+<h1>
+💰 Gliza Personal Financial Monitoring System
+</h1>
 
-      <hr/>
+<h2>⚡ Daily Tracker</h2>
 
-      <h2>📈 Trends</h2>
+<select
+value={category}
+onChange={(e)=>
+setCategory(e.target.value)}
+>
 
-      <ul>
-        <li>Weekly Expense Trend</li>
-        <li>Monthly Expense Trend</li>
-        <li>Income vs Expense</li>
-        <li>Savings Progress</li>
-      </ul>
+<option>
+Transportation
+</option>
 
-      <button>
-      ⬇ Download Financial Report
-      </button>
+<option>
+Food
+</option>
 
-    </div>
-  );
+<option>
+Shopping
+</option>
+
+<option>
+Bills
+</option>
+
+</select>
+
+<input
+
+placeholder="Expense (£)"
+
+value={amount}
+
+onChange={(e)=>
+setAmount(e.target.value)}
+
+ />
+
+<button onClick={addExpense}>
+Add Expense
+</button>
+
+<hr/>
+
+<h2>🤖 Forecast & Recommendation</h2>
+
+<p>
+Validation:
+{expenses.length}
+transactions analyzed
+</p>
+
+<p>
+Confidence:
+70%
+</p>
+
+<p>
+Predicted Savings:
+£260/month
+</p>
+
+<hr/>
+
+<h2>
+📄 Daily Spend Records
+</h2>
+
+<table border="1">
+
+<thead>
+
+<tr>
+
+<th>Date</th>
+
+<th>Category</th>
+
+<th>Expense</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{expenses.map(
+(item,index)=>(
+
+<tr key={index}>
+
+<td>{item.date}</td>
+
+<td>{item.category}</td>
+
+<td>
+£{item.amount}
+</td>
+
+</tr>
+
+))}
+
+</tbody>
+
+</table>
+
+</div>
+
+)
+
 }
