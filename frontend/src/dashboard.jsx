@@ -3,29 +3,23 @@ import * as XLSX from "xlsx";
 
 export default function Dashboard(){
 
-const [records,setRecords]=useState([]);
+const [transactions,setTransactions]=useState([]);
 
-const [income,setIncome]=useState("");
-const [savingGoal,setSavingGoal]=useState("");
-
-const [loanType,setLoanType]=useState("Student Loan");
-const [loan,setLoan]=useState("");
-
-const [expense,setExpense]=useState("");
+const [type,setType]=useState("Expense");
 const [category,setCategory]=useState("Transportation");
+const [amount,setAmount]=useState("");
 const [description,setDescription]=useState("");
-
 
 useEffect(()=>{
 
 const saved=
 localStorage.getItem(
-"finance_records"
+"ai_transactions"
 );
 
 if(saved){
 
-setRecords(
+setTransactions(
 JSON.parse(saved)
 );
 
@@ -35,9 +29,10 @@ JSON.parse(saved)
 
 
 
-function addExpense(){
+function addTransaction(){
 
-if(!expense)return;
+if(!amount)return;
+
 
 const item={
 
@@ -47,56 +42,133 @@ date:
 new Date()
 .toLocaleDateString(),
 
-expense:
-Number(expense),
+time:
+new Date()
+.toLocaleTimeString(),
+
+type,
 
 category,
+
+amount:Number(amount),
 
 description
 
 };
 
+
 const updated=[
-...records,
-item
+
+item,
+...transactions
+
 ];
 
-setRecords(updated);
 
-localStorage.setItem(
-"finance_records",
-JSON.stringify(updated)
+setTransactions(
+updated
 );
 
-setExpense("");
+localStorage.setItem(
+
+"ai_transactions",
+
+JSON.stringify(
+updated)
+
+);
+
+
+setAmount("");
 setDescription("");
 
 }
 
 
 
-const totalExpenses=
+const income=
 
-records.reduce(
-(sum,item)=>
-sum+
-item.expense
+transactions
+.filter(
+t=>t.type==="Income"
+)
+.reduce(
+(sum,t)=>
+sum+t.amount
 ,0
 );
 
 
+const expenses=
+
+transactions
+.filter(
+t=>t.type==="Expense"
+)
+.reduce(
+(sum,t)=>
+sum+t.amount
+,0
+);
+
 
 const balance=
+income-expenses;
 
-Number(income||0)
 
--
 
-totalExpenses
+const topCategory=()=>{
 
--
+const categories={};
 
-Number(loan||0);
+transactions.forEach(t=>{
+
+if(
+t.type==="Expense"
+){
+
+categories[
+t.category
+]
+
+=
+
+(
+categories[
+t.category
+]||0
+)
+
++
+
+t.amount;
+
+}
+
+});
+
+
+const top=
+
+Object.entries(
+categories
+)
+
+.sort(
+(a,b)=>
+
+b[1]-a[1]
+
+)[0];
+
+
+return top
+
+?top[0]
+
+:"No data";
+
+};
 
 
 
@@ -104,42 +176,27 @@ function recommendation(){
 
 if(balance<0){
 
-return "⚠ High spending detected. Reduce optional purchases and transportation costs.";
+return "⚠ Spending exceeds income.";
 
 }
 
 if(
 
-Number(loan)
->
-
-Number(income)*0.5
+topCategory()==="Transportation"
 
 ){
 
-return "📉 Loan burden is high. Focus on reducing debt before increasing savings.";
+return "🚇 Transportation is your highest spending category.";
 
 }
 
-if(
+if(expenses>income*.7){
 
-savingGoal>
-
-income
-
-){
-
-return "🎯 Savings target may be unrealistic based on current cashflow.";
+return "📉 Spending is consuming most income.";
 
 }
 
-if(records.length>5){
-
-return "📈 Spending behavior looks stable. Continue daily monitoring.";
-
-}
-
-return "Collect more daily records for stronger forecasting.";
+return "📈 Spending pattern currently stable.";
 
 }
 
@@ -147,107 +204,93 @@ return "Collect more daily records for stronger forecasting.";
 
 function forecast(){
 
-if(records.length===0){
+if(
+transactions.length<5
+){
 
-return "No prediction yet";
-
-}
-
-const average=
-
-totalExpenses
-/
-records.length;
-
-
-const future=
-
-Math.round(
-average*30
-);
-
-
-return `Predicted monthly spending: £${future}`;
+return
+"Need more records";
 
 }
 
 
+const avg=
 
-const confidence=
+expenses/
 
-records.length>15
-
-?96
-
-:records.length>8
-
-?90
-
-:75;
+transactions.length;
 
 
+return
 
-function downloadSpreadsheet(){
+`Predicted monthly spending:
+£${Math.round(
+avg*30
+)}`;
+
+}
+
+
+
+function exportExcel(){
 
 const rows=[
 
 [
 "Date",
+"Time",
+"Type",
 "Category",
-"Expense",
-"Description",
-"Loan Type",
-"Balance",
-"Forecast"
+"Amount",
+"Description"
 ]
 
 ];
 
 
-records.forEach(
-
-item=>{
+transactions.forEach(t=>{
 
 rows.push([
 
-item.date,
+t.date,
 
-item.category,
+t.time,
 
-item.expense,
+t.type,
 
-item.description,
+t.category,
 
-loanType,
+t.amount,
 
-balance,
+t.description
 
-forecast()
+]);
 
-])
-
-}
-
-);
+});
 
 
 const ws=
 
 XLSX.utils
-.aoa_to_sheet(rows);
+.aoa_to_sheet(
+rows
+);
 
 const wb=
-XLSX.utils.book_new();
 
-XLSX.utils.book_append_sheet(
+XLSX.utils
+.book_new();
+
+XLSX.utils
+.book_append_sheet(
 wb,
 ws,
-"Financial Report"
+"Transactions"
 );
 
 XLSX.writeFile(
 wb,
-"Financial_Report.xlsx"
+"AI_Transactions.xlsx"
 );
 
 }
@@ -258,31 +301,30 @@ return(
 
 <div
 style={{
-background:"#F3F6FB",
-minHeight:"100vh",
 padding:"30px",
-fontFamily:"Arial"
+background:"#F5F7FB",
+minHeight:"100vh"
 }}
 >
 
 <div
 style={{
 background:"#111827",
-padding:"35px",
-borderRadius:"20px",
-color:"white"
+color:"white",
+padding:"30px",
+borderRadius:"20px"
 }}
 >
 
 <h1>
 
-💰 AI Financial Companion
+🤖 AI Saving Companion
 
 </h1>
 
 <p>
 
-Smart Budget Monitoring Platform
+Track → Analyze → Predict → Improve
 
 </p>
 
@@ -304,22 +346,22 @@ marginTop:"25px"
 
 {
 title:"💼 Income",
-value:`£${income||0}`
+value:`£${income}`
 },
 
 {
 title:"💸 Expenses",
-value:`£${totalExpenses}`
-},
-
-{
-title:"🏦 Loan",
-value:`£${loan||0}`
+value:`£${expenses}`
 },
 
 {
 title:"💰 Balance",
 value:`£${balance}`
+},
+
+{
+title:"🔥 Top Spend",
+value:topCategory()
 }
 
 ].map((card,i)=>(
@@ -329,22 +371,16 @@ key={i}
 style={{
 background:"white",
 padding:"25px",
-borderRadius:"20px",
-boxShadow:
-"0 4px 15px rgba(0,0,0,.08)"
+borderRadius:"18px"
 }}
 >
 
 <h3>
-
 {card.title}
-
 </h3>
 
 <h1>
-
 {card.value}
-
 </h1>
 
 </div>
@@ -360,104 +396,100 @@ boxShadow:
 <div
 style={{
 background:"white",
-padding:"30px",
-marginTop:"25px",
-borderRadius:"20px"
+padding:"25px",
+borderRadius:"20px",
+marginTop:"20px"
 }}
 >
 
 <h2>
 
-⚡ Daily Tracker
+⚡ Transaction Entry
 
 </h2>
 
-<div
-style={{
-display:"grid",
-gridTemplateColumns:
-"repeat(auto-fit,minmax(250px,1fr))",
-gap:"15px"
-}}
->
-
-<input
-type="number"
-placeholder="Income (£)"
-value={income}
-onChange={(e)=>setIncome(e.target.value)}
-/>
-
-<input
-type="number"
-placeholder="Savings Goal (£)"
-value={savingGoal}
-onChange={(e)=>setSavingGoal(e.target.value)}
-/>
-
 <select
-value={loanType}
-onChange={(e)=>setLoanType(e.target.value)}
+value={type}
+onChange={(e)=>
+setType(
+e.target.value
+)}
 >
 
-<option>Student Loan</option>
-<option>Credit Card</option>
-<option>Personal Loan</option>
-<option>Mortgage</option>
-<option>Car Loan</option>
-<option>Family Loan</option>
-<option>Other</option>
+<option>
+Expense
+</option>
+
+<option>
+Income
+</option>
 
 </select>
 
-<input
-type="number"
-placeholder="Loan Amount"
-value={loan}
-onChange={(e)=>setLoan(e.target.value)}
-/>
 
 <select
 value={category}
-onChange={(e)=>setCategory(e.target.value)}
+onChange={(e)=>
+setCategory(
+e.target.value
+)}
 >
 
-<option>Transportation</option>
-<option>Food</option>
-<option>Bills</option>
-<option>Travel</option>
-<option>Shopping</option>
+<option>
+Transportation
+</option>
+
+<option>
+Food
+</option>
+
+<option>
+Bills
+</option>
+
+<option>
+Shopping
+</option>
+
+<option>
+Salary
+</option>
+
+<option>
+Project
+</option>
 
 </select>
 
+
 <input
 type="number"
-placeholder="Expense (£)"
-value={expense}
-onChange={(e)=>setExpense(e.target.value)}
+placeholder="Amount"
+value={amount}
+onChange={(e)=>
+setAmount(
+e.target.value
+)}
 />
+
 
 <input
 placeholder="Description"
 value={description}
-onChange={(e)=>setDescription(e.target.value)}
+onChange={(e)=>
+setDescription(
+e.target.value
+)}
 />
 
+
 <button
-onClick={addExpense}
-style={{
-background:"#111827",
-color:"white",
-border:"none",
-borderRadius:"10px"
-}}
+onClick={addTransaction}
 >
 
-+ Add Expense
+Add Transaction
 
 </button>
-
-</div>
 
 </div>
 
@@ -467,33 +499,35 @@ borderRadius:"10px"
 style={{
 background:"white",
 padding:"25px",
-marginTop:"25px",
-borderRadius:"20px"
+borderRadius:"20px",
+marginTop:"20px"
 }}
 >
 
 <h2>
 
-🤖 Forecasting & Recommendation
+🤖 AI Analysis
 
 </h2>
 
 <p>
 
+Top habit:
+{topCategory()}
+
+</p>
+
+<p>
+
+Forecast:
 {forecast()}
 
 </p>
 
 <p>
 
+Recommendation:
 {recommendation()}
-
-</p>
-
-<p>
-
-Confidence:
-{confidence}%
 
 </p>
 
@@ -505,24 +539,22 @@ Confidence:
 style={{
 background:"white",
 padding:"25px",
-marginTop:"25px",
-borderRadius:"20px"
+borderRadius:"20px",
+marginTop:"20px"
 }}
 >
 
 <button
-onClick={downloadSpreadsheet}
+onClick={exportExcel}
 >
 
-⬇ Download Spreadsheet
+⬇ Download Report
 
 </button>
-
 
 <table
 width="100%"
 border="1"
-cellPadding="8"
 style={{
 marginTop:"15px"
 }}
@@ -533,11 +565,9 @@ marginTop:"15px"
 <tr>
 
 <th>Date</th>
-
+<th>Type</th>
 <th>Category</th>
-
-<th>Expense</th>
-
+<th>Amount</th>
 <th>Description</th>
 
 </tr>
@@ -548,47 +578,17 @@ marginTop:"15px"
 
 {
 
-records.length===0
+transactions.map(
 
-?
+t=>(
 
-<tr>
+<tr key={t.id}>
 
-<td
-colSpan="4"
->
-
-No records available
-
-</td>
-
-</tr>
-
-:
-
-records.map(
-
-item=>(
-
-<tr
-key={item.id}
->
-
-<td>
-{item.date}
-</td>
-
-<td>
-{item.category}
-</td>
-
-<td>
-£{item.expense}
-</td>
-
-<td>
-{item.description}
-</td>
+<td>{t.date}</td>
+<td>{t.type}</td>
+<td>{t.category}</td>
+<td>£{t.amount}</td>
+<td>{t.description}</td>
 
 </tr>
 
