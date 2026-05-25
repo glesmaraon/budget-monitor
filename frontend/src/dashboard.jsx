@@ -1,34 +1,34 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React,{useState,useEffect} from "react";
+import * as XLSX from "xlsx";
 
-export default function Dashboard() {
-
-const [tab,setTab]=useState("Home");
-
-const [goal,setGoal]=useState(2400);
-
-const [type,setType]=useState("Expense");
-
-const [category,setCategory]=useState("");
-
-const [customCategory,setCustomCategory]=useState("");
-
-const [amount,setAmount]=useState("");
-
-const [date,setDate]=useState(
-new Date().toISOString().slice(0,10)
-);
-
-const [time,setTime]=useState(
-new Date().toTimeString().slice(0,5)
-);
+export default function Dashboard(){
 
 const [records,setRecords]=useState([]);
+
+const [income,setIncome]=useState("");
+const [expense,setExpense]=useState("");
+
+const [category,setCategory]=
+useState("Transportation");
+
+const [description,setDescription]=
+useState("");
+
+const [loanType,setLoanType]=
+useState("Student Loan");
+
+const [loan,setLoan]=
+useState("");
+
+const [savingGoal,setSavingGoal]=
+useState("");
 
 useEffect(()=>{
 
 const saved=
+
 localStorage.getItem(
-"transactions"
+"finance_records"
 );
 
 if(saved){
@@ -41,470 +41,319 @@ JSON.parse(saved)
 
 },[]);
 
-useEffect(()=>{
 
-localStorage.setItem(
-"transactions",
-JSON.stringify(records)
-);
 
-},[records]);
+function addExpense(){
 
-const categories={
-
-Expense:[
-"Food",
-"Transportation",
-"Bills",
-"Shopping",
-"Health",
-"Education",
-"Entertainment",
-"Other"
-],
-
-Income:[
-"Salary",
-"Allowance",
-"Bonus",
-"Freelance",
-"Other"
-],
-
-Savings:[
-"Emergency Fund",
-"Travel",
-"Investment",
-"Other"
-],
-
-Loan:[
-"Personal Loan",
-"Credit Card",
-"Mortgage",
-"Other"
-]
-
-};
-
-function addTransaction(){
-
-if(
-!category||
-!amount
-)return;
-
-const finalCategory=
-
-category==="Other"
-
-?customCategory
-
-:category;
+if(!expense)return;
 
 const item={
 
-type,
+id:Date.now(),
 
-category:
-finalCategory,
+date:
+new Date()
+.toLocaleDateString(),
 
-amount:
-Number(amount),
+category,
 
-date,
+expense:
+Number(expense),
 
-time
+description
 
 };
 
-setRecords([
+const updated=[
 ...records,
 item
-]);
+];
 
-setCategory("");
+setRecords(updated);
 
-setCustomCategory("");
+localStorage.setItem(
 
-setAmount("");
+"finance_records",
+
+JSON.stringify(
+updated
+)
+
+);
+
+setExpense("");
+setDescription("");
 
 }
 
-const totals=useMemo(()=>{
 
-return{
-
-income:
-records
-.filter(
-x=>x.type==="Income"
-)
-.reduce(
-(a,b)=>a+b.amount,
-0
-),
-
-expense:
-records
-.filter(
-x=>x.type==="Expense"
-)
-.reduce(
-(a,b)=>a+b.amount,
-0
-),
-
-savings:
-records
-.filter(
-x=>x.type==="Savings"
-)
-.reduce(
-(a,b)=>a+b.amount,
-0
-),
-
-loan:
-records
-.filter(
-x=>x.type==="Loan"
-)
-.reduce(
-(a,b)=>a+b.amount,
-0
-)
-
-}
-
-},[records]);
-
-const monthlyGoal=
-Math.round(
-goal/12
-);
-
-const predictedYear=
-
-totals.savings*12;
-
-const achievement=
-
-Math.min(
-100,
-Math.round(
-(predictedYear/
-goal)*100
-)
-);
-
-const validation=
-records.length;
-
-const confidence=
-
-validation>=20
-?90
-:validation>=10
-?80
-:60;
-
-const reality=
-validation>=20
-?85
-:70;
-
-const weeklySpend=
-Math.round(
-totals.expense/4
-);
-
-const savingsRate=
-
-totals.income
-
-?
-
-Math.round(
-
-(
-totals.savings/
-totals.income
-)*100
-)
-
-:0;
-
-const netBalance=
-
-totals.income-
-totals.expense;
-
-const aiCoach=
-
-achievement<50
-
-?
-
-`You may miss your yearly goal.
-Reduce spending by £${Math.max(
-1,
-Math.round(
-(monthlyGoal-
-totals.savings)/30
-)
-)}/day.`
-
-:
-
-"You're progressing well 🎉";
 
 function downloadReport(){
 
-const report=
+const rows=[
 
-records.map(
+[
+"Date",
+"Category",
+"Expense",
+"Description",
+"Loan Type",
+"Balance"
+]
 
-x=>
+];
 
-`${x.date},
+records.forEach(item=>{
 
-${x.time},
+rows.push([
 
-${x.type},
+item.date,
 
-${x.category},
+item.category,
 
-£${x.amount}`
+item.expense,
 
-).join("\n");
+item.description,
 
-const blob=
-new Blob(
-[report],
-{type:"text/plain"}
+loanType,
+
+balance
+
+]);
+
+});
+
+
+const worksheet=
+
+XLSX.utils
+.aoa_to_sheet(
+rows
 );
 
-const a=
-document.createElement("a");
+const workbook=
 
-a.href=
-URL.createObjectURL(
-blob
+XLSX.utils
+.book_new();
+
+XLSX.utils
+.book_append_sheet(
+
+workbook,
+
+worksheet,
+
+"Financial Report"
+
 );
 
-a.download=
-"Transactions_Report.txt";
+XLSX.writeFile(
 
-a.click();
+workbook,
+
+"Financial_Report.xlsx"
+
+);
 
 }
 
-function renderTable(name){
 
-const data=
-records.filter(
-x=>x.type===name
+
+const totalExpenses=
+
+records.reduce(
+
+(sum,r)=>
+
+sum+
+Number(
+r.expense||0
+),
+
+0
+
 );
+
+
+const balance=
+
+Number(
+income||0
+)
+
+-
+
+totalExpenses
+
+-
+
+Number(
+loan||0
+);
+
+
+
+const recommendation=()=>{
+
+if(balance<0){
+
+return
+"⚠ Overspending detected. Reduce optional expenses and prioritize essentials.";
+
+}
+
+if(
+
+Number(loan)
+
+>
+
+Number(income)*0.5
+
+){
+
+return
+"📉 Loan burden may affect future savings. Focus on repayments.";
+
+}
+
+if(records.length>5){
+
+return
+"📈 Spending trend stable. Savings goal achievable if pattern continues.";
+
+}
+
+return
+"Add more daily spending data for stronger AI forecasting.";
+
+};
+
+
 
 return(
 
 <div
 style={{
-background:"white",
-padding:"20px",
-borderRadius:"15px",
-boxShadow:
-"0 2px 10px lightgray",
-marginBottom:"20px"
+background:"#f4f7fb",
+minHeight:"100vh",
+padding:"30px",
+fontFamily:"Arial"
 }}
 >
 
-<h3>
-{name}
-Records
-</h3>
-
-<table
-width="100%"
-border="1"
-cellPadding="8"
+<div
+style={{
+background:"#111827",
+padding:"30px",
+borderRadius:"20px",
+color:"white"
+}}
 >
 
-<thead>
-
-<tr>
-
-<th>Date</th>
-
-<th>Time</th>
-
-<th>Category</th>
-
-<th>£</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{data.map(
-(item,index)=>
-
-<tr key={index}>
-
-<td>
-{item.date}
-</td>
-
-<td>
-{item.time}
-</td>
-
-<td>
-{item.category}
-</td>
-
-<td>
-£{item.amount}
-</td>
-
-</tr>
-
-)}
-
-</tbody>
-
-</table>
-
-</div>
-
-)
-
-}
-
-return(
-
-<div style={{
-
-padding:"30px",
-
-background:"#f5f8fc",
-
-minHeight:"100vh",
-
-fontFamily:"Arial"
-
-}}>
-
 <h1>
-💰 Personal Financial Monitoring
+💰 AI Financial Companion
 </h1>
 
 <p>
-Track smarter with AI guidance
+Simple financial dashboard + forecasting
 </p>
 
-<button
-onClick={()=>
-setTab("Home")
-}
->
+</div>
 
-Home
-
-</button>
-
-<button
-onClick={()=>
-setTab("Summary")
-}
->
-
-Summary
-
-</button>
-
-<hr/>
-
-{tab==="Home"&&(
-
-<>
 
 <div
 style={{
-display:"flex",
+
+display:"grid",
+
+gridTemplateColumns:
+"repeat(auto-fit,minmax(220px,1fr))",
+
 gap:"20px",
-flexWrap:"wrap"
+
+marginTop:"20px"
+
 }}
 >
 
-<div style={{
+{[
+
+{
+title:"💼 Income",
+value:`£${income||0}`
+},
+
+{
+title:"💸 Expenses",
+value:`£${totalExpenses}`
+},
+
+{
+title:"🏦 Loan",
+value:`£${loan||0}`
+},
+
+{
+title:"💰 Balance",
+value:`£${balance}`
+}
+
+].map((card,i)=>(
+
+<div
+key={i}
+style={{
 background:"white",
-padding:"20px",
-borderRadius:"15px",
-flex:"1"
-}}>
+padding:"25px",
+borderRadius:"18px",
+boxShadow:
+"0 4px 10px rgba(0,0,0,.08)"
+}}
+>
 
-💵 Income
+<h3>{card.title}</h3>
 
-<h2>
-£{totals.income}
-</h2>
+<h1>{card.value}</h1>
 
 </div>
 
-<div style={{
-background:"white",
-padding:"20px",
-borderRadius:"15px",
-flex:"1"
-}}>
+))
 
-📉 Expenses
-
-<h2>
-£{totals.expense}
-</h2>
+}
 
 </div>
 
-<div style={{
-background:"white",
-padding:"20px",
-borderRadius:"15px",
-flex:"1"
-}}>
 
-💰 Savings
+<div
+style={{
+background:"white",
+padding:"25px",
+borderRadius:"18px",
+marginTop:"20px"
+}}
+>
 
 <h2>
-£{totals.savings}
-</h2>
-
-</div>
-
-</div>
-
-<br/>
-
-<div style={{
-background:"white",
-padding:"20px",
-borderRadius:"15px"
-}}>
-
-<h2>
-⚡ Quick Entry
+⚡ Daily Tracker
 </h2>
 
 <input
 type="number"
-placeholder="Savings Goal / Year (£)"
-value={goal}
+placeholder="Income (£)"
+value={income}
 onChange={(e)=>
-setGoal(
+setIncome(
+e.target.value
+)}
+/>
+
+<input
+type="number"
+placeholder="Savings Goal"
+value={savingGoal}
+onChange={(e)=>
+setSavingGoal(
 e.target.value
 )}
 />
@@ -512,27 +361,33 @@ e.target.value
 <br/><br/>
 
 <select
-value={type}
-onChange={(e)=>{
-
-setType(
+value={loanType}
+onChange={(e)=>
+setLoanType(
 e.target.value
-);
-
-setCategory("");
-
-}}
+)}
 >
 
-<option>Expense</option>
-
-<option>Income</option>
-
-<option>Savings</option>
-
-<option>Loan</option>
+<option>Student Loan</option>
+<option>Credit Card</option>
+<option>Personal Loan</option>
+<option>Mortgage</option>
+<option>Car Loan</option>
+<option>Family Loan</option>
 
 </select>
+
+<input
+type="number"
+placeholder="Loan Amount"
+value={loan}
+onChange={(e)=>
+setLoan(
+e.target.value
+)}
+/>
+
+<br/><br/>
 
 <select
 value={category}
@@ -542,190 +397,84 @@ e.target.value
 )}
 >
 
-<option>
-Select Category
-</option>
-
-{
-categories[type]
-.map(
-x=>
-
-<option key={x}>
-{x}
-</option>
-)
-
-}
+<option>Transportation</option>
+<option>Food</option>
+<option>Bills</option>
+<option>Travel</option>
+<option>Shopping</option>
 
 </select>
 
-{category==="Other"&&(
-
-<input
-placeholder="Other"
-value={customCategory}
-onChange={(e)=>
-setCustomCategory(
-e.target.value
-)}
-/>
-
-)}
-
-<input
-type="date"
-value={date}
-onChange={(e)=>
-setDate(
-e.target.value
-)}
-/>
-
-<input
-type="time"
-value={time}
-onChange={(e)=>
-setTime(
-e.target.value
-)}
-/>
-
 <input
 type="number"
-placeholder="Amount £"
-value={amount}
+placeholder="Expense (£)"
+value={expense}
 onChange={(e)=>
-setAmount(
+setExpense(
+e.target.value
+)}
+/>
+
+<input
+placeholder="Description"
+value={description}
+onChange={(e)=>
+setDescription(
 e.target.value
 )}
 />
 
 <button
-onClick={
-addTransaction
-}
+onClick={addExpense}
 >
 
-Add
+Add Expense
 
 </button>
 
 </div>
 
-<br/>
 
-<div style={{
+<div
+style={{
 background:"white",
-padding:"20px",
-borderRadius:"15px"
-}}>
+padding:"25px",
+marginTop:"20px",
+borderRadius:"18px"
+}}
+>
 
 <h2>
-🤖 AI Prediction Analysis
+🤖 Forecast & Recommendation
 </h2>
 
 <p>
-Goal Achievement:
-{achievement}%
-</p>
 
-<p>
-Predicted Year-End:
-£{predictedYear}
-</p>
+{recommendation()}
 
-<p>
-AI Confidence:
-{confidence}%
-</p>
-
-<p>
-Reality:
-{reality}%
-</p>
-
-<p>
-Validation:
-{validation}
-transactions
-</p>
-
-<p>
-AI Coach:
-{aiCoach}
 </p>
 
 </div>
 
-<br/>
 
-<div style={{
+<div
+style={{
 background:"white",
-padding:"20px",
-borderRadius:"15px"
-}}>
-
-<h2>
-📈 Trends
-</h2>
-
-<p>
-Weekly Spend:
-£{weeklySpend}
-</p>
-
-<p>
-Savings Rate:
-{savingsRate}%
-</p>
-
-<p>
-Net Balance:
-£{netBalance}
-</p>
-
-</div>
-
-<br/>
+padding:"25px",
+marginTop:"20px",
+borderRadius:"18px"
+}}
+>
 
 <button
-onClick={
-downloadReport
-}
+onClick={downloadReport}
 >
 
-⬇ Download Report
+⬇ Download Spreadsheet
 
 </button>
 
-</>
-
-)}
-
-{tab==="Summary"&&(
-
-<>
-
-{renderTable(
-"Expense"
-)}
-
-{renderTable(
-"Income"
-)}
-
-{renderTable(
-"Savings"
-)}
-
-{renderTable(
-"Loan"
-)}
-
-</>
-
-)}
+</div>
 
 </div>
 
