@@ -13,7 +13,7 @@ export default function Dashboard() {
       date: new Date().toLocaleDateString(),
       type,
       category,
-      amount: Number(amount),
+      amount: Number(amount)
     };
 
     setRecords([...records, newRecord]);
@@ -37,11 +37,16 @@ export default function Dashboard() {
   const validation = records.length;
 
   const confidence =
-    validation >= 20 ? 90 :
-    validation >= 10 ? 80 : 60;
+    validation >= 20
+      ? 90
+      : validation >= 10
+      ? 80
+      : 60;
 
   const realityScore =
-    validation >= 20 ? 90 : 70;
+    validation >= 20
+      ? 90
+      : 70;
 
   const financialHealth = Math.max(
     0,
@@ -62,27 +67,100 @@ export default function Dashboard() {
       ? "Try saving £5/day"
       : "You're on track 🎉";
 
-  return (
-    <div style={{
-      padding:"30px",
-      fontFamily:"Arial"
-    }}>
+  const weeklySpend =
+    Math.round(totalExpense / 4);
 
+  const savingsRate =
+    totalIncome
+      ? Math.round(
+          (totalSavings / totalIncome) * 100
+        )
+      : 0;
+
+  const netBalance =
+    totalIncome - totalExpense;
+
+  const downloadReport = () => {
+    const report = `
+
+GLIZA FINANCIAL REPORT
+
+Income: £${totalIncome}
+
+Expenses: £${totalExpense}
+
+Savings: £${totalSavings}
+
+Financial Health:
+${financialHealth}/100
+
+AI Confidence:
+${confidence}%
+
+Reality Score:
+${realityScore}%
+
+Predicted Savings:
+£${predictedSavings}
+
+Transactions:
+${validation}
+
+Weekly Spend:
+£${weeklySpend}
+
+Savings Rate:
+${savingsRate}%
+
+Net Balance:
+£${netBalance}
+
+`;
+
+    const blob = new Blob(
+      [report],
+      { type: "text/plain" }
+    );
+
+    const link =
+      document.createElement("a");
+
+    link.href =
+      URL.createObjectURL(blob);
+
+    link.download =
+      "Financial_Report.txt";
+
+    link.click();
+  };
+
+  return (
+    <div
+      style={{
+        padding: "30px",
+        fontFamily: "Arial",
+        maxWidth: "1000px",
+        margin: "auto"
+      }}
+    >
       <h1>
-        💰 Gliza Personal Financial Monitoring System
+        💰 Gliza Personal Financial Tracker
       </h1>
 
-      <h3>
-        Welcome back!
-      </h3>
+      <p>
+        Track smarter. Build healthy
+        financial habits.
+      </p>
 
-      <hr/>
+      <hr />
 
-      <h2>⚡ Daily Tracker</h2>
+      <h2>
+        ⚡ Daily Tracker
+      </h2>
 
       <select
         value={type}
-        onChange={(e)=>
+        onChange={(e) =>
           setType(e.target.value)
         }
       >
@@ -92,13 +170,39 @@ export default function Dashboard() {
         <option>Loan</option>
       </select>
 
-      <input
-        placeholder="Category"
+      <br /><br />
+
+      <select
         value={category}
         onChange={(e)=>
           setCategory(e.target.value)
         }
-      />
+      >
+        <option value="">
+          Select Category
+        </option>
+
+        <optgroup label="Expense">
+          <option>Transportation</option>
+          <option>Food</option>
+          <option>Bills</option>
+          <option>Shopping</option>
+          <option>Health</option>
+          <option>Education</option>
+        </optgroup>
+
+        <optgroup label="Income">
+          <option>Salary</option>
+          <option>Allowance</option>
+          <option>Freelance</option>
+        </optgroup>
+
+        <optgroup label="Savings">
+          <option>Savings Deposit</option>
+          <option>Loan Payment</option>
+        </optgroup>
+
+      </select>
 
       <input
         type="number"
@@ -109,96 +213,157 @@ export default function Dashboard() {
         }
       />
 
-      <button onClick={addTransaction}>
+      <button
+        onClick={addTransaction}
+      >
         Add
       </button>
 
-      <hr/>
+      <hr />
 
-      <h2>📊 Financial Overview</h2>
+      <h2>
+      📊 Financial Overview
+      </h2>
 
-      <p>Income: £{totalIncome}</p>
-      <p>Expenses: £{totalExpense}</p>
-      <p>Savings: £{totalSavings}</p>
       <p>
-        Financial Health:
-        {financialHealth}/100
+      Income: £{totalIncome}
+      </p>
+
+      <p>
+      Expenses: £{totalExpense}
+      </p>
+
+      <p>
+      Savings: £{totalSavings}
+      </p>
+
+      <p>
+      Financial Health:
+      {financialHealth}/100
       </p>
 
       <hr/>
 
       <h2>
-        🤖 Forecast & Recommendation
+      🤖 Forecast &
+      Recommendation
       </h2>
 
       <p>
-        Success Chance:
-        {financialHealth}%
+      Success Chance:
+      {financialHealth}%
       </p>
 
       <p>
-        AI Confidence:
-        {confidence}%
+      AI Confidence:
+      {confidence}%
       </p>
 
       <p>
-        Reality Score:
-        {realityScore}%
+      Reality Score:
+      {realityScore}%
       </p>
 
       <p>
-        Validation:
-        {validation}
-        transactions analyzed
+      Validation:
+      {validation}
+      transactions analyzed
       </p>
 
       <p>
-        Predicted Savings:
-        £{predictedSavings}/month
+      Predicted Savings:
+      £{predictedSavings}/month
       </p>
 
       <p>
-        Time Horizon:
-        Next 30 days
+      Time Horizon:
+      Next 30 days
       </p>
 
       <p>
-        Recommendation:
-        {recommendation}
+      Recommendation:
+      {recommendation}
       </p>
 
       <hr/>
 
       <h2>
-        📄 Transaction Records
+      📈 Trends
       </h2>
 
-      <table border="1" cellPadding="10">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Category</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
+      <p>
+      Weekly Spend:
+      £{weeklySpend}
+      </p>
 
-        <tbody>
-          {records.map((item,index)=>(
-            <tr key={index}>
-              <td>{item.date}</td>
-              <td>{item.type}</td>
-              <td>{item.category}</td>
-              <td>£{item.amount}</td>
-            </tr>
-          ))}
-        </tbody>
+      <p>
+      Monthly Spend:
+      £{totalExpense}
+      </p>
+
+      <p>
+      Savings Rate:
+      {savingsRate}%
+      </p>
+
+      <p>
+      Net Balance:
+      £{netBalance}
+      </p>
+
+      <hr/>
+
+      <h2>
+      📄 Transactions
+      </h2>
+
+      <table
+      border="1"
+      cellPadding="10"
+      width="100%"
+      >
+
+      <thead>
+
+      <tr>
+      <th>Date</th>
+      <th>Type</th>
+      <th>Category</th>
+      <th>Amount</th>
+      </tr>
+
+      </thead>
+
+      <tbody>
+
+      {records.map(
+      (item,index)=>(
+      <tr key={index}>
+
+      <td>{item.date}</td>
+
+      <td>{item.type}</td>
+
+      <td>{item.category}</td>
+
+      <td>
+      £{item.amount}
+      </td>
+
+      </tr>
+
+      ))}
+
+      </tbody>
+
       </table>
 
       <br/>
 
-      <button>
-        ⬇ Download Report (next step)
+      <button
+      onClick={downloadReport}
+      >
+      ⬇ Download Report
       </button>
 
     </div>
