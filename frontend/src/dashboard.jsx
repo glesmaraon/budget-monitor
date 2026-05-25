@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 
 export default function Dashboard() {
   const [type, setType] = useState("Expense");
@@ -6,12 +6,47 @@ export default function Dashboard() {
   const [customCategory, setCustomCategory] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().slice(0,10)
+  );
+  const [time, setTime] = useState(
+    new Date().toTimeString().slice(0,5)
   );
 
   const [records, setRecords] = useState([]);
 
-  const addTransaction = () => {
+  const categories = {
+    Expense: [
+      "Food",
+      "Transportation",
+      "Bills",
+      "Shopping",
+      "Health",
+      "Education",
+      "Entertainment",
+      "Other"
+    ],
+    Income: [
+      "Salary",
+      "Allowance",
+      "Freelance",
+      "Bonus",
+      "Other"
+    ],
+    Savings: [
+      "Emergency Fund",
+      "Travel",
+      "Investment",
+      "Other"
+    ],
+    Loan: [
+      "Personal Loan",
+      "Credit Card",
+      "Mortgage",
+      "Other"
+    ]
+  };
+
+  function addTransaction() {
     if (!amount || !category) return;
 
     const finalCategory =
@@ -19,156 +54,215 @@ export default function Dashboard() {
         ? customCategory
         : category;
 
-    const newRecord = {
-      date,
+    const item = {
       type,
       category: finalCategory,
-      amount: Number(amount)
+      amount: Number(amount),
+      date,
+      time
     };
 
-    setRecords([...records, newRecord]);
+    setRecords(prev => [...prev, item]);
 
     setCategory("");
     setCustomCategory("");
     setAmount("");
-  };
+  }
 
-  const totalIncome = records
-    .filter(x => x.type === "Income")
-    .reduce((s,x)=>s+x.amount,0);
+  const totals = useMemo(() => {
+    return {
+      income:
+        records
+          .filter(x=>x.type==="Income")
+          .reduce((a,b)=>a+b.amount,0),
 
-  const totalExpense = records
-    .filter(x => x.type === "Expense")
-    .reduce((s,x)=>s+x.amount,0);
+      expense:
+        records
+          .filter(x=>x.type==="Expense")
+          .reduce((a,b)=>a+b.amount,0),
 
-  const totalSavings = records
-    .filter(x => x.type === "Savings")
-    .reduce((s,x)=>s+x.amount,0);
+      savings:
+        records
+          .filter(x=>x.type==="Savings")
+          .reduce((a,b)=>a+b.amount,0),
 
-  const validation=records.length;
+      loan:
+        records
+          .filter(x=>x.type==="Loan")
+          .reduce((a,b)=>a+b.amount,0)
+    };
+  }, [records]);
 
-  const financialHealth=Math.max(
+  const health=Math.max(
     0,
     Math.min(
       100,
       Math.round(
-        ((totalIncome-totalExpense)/
-        (totalIncome||1))*100
+        (
+        (totals.income-totals.expense)/
+        (totals.income||1)
+        )*100
       )
     )
   );
 
-  const confidence=
-    validation>=20 ? 90 :
-    validation>=10 ? 80 : 60;
+  const predicted =
+    totals.income -
+    totals.expense +
+    totals.savings;
 
-  const predictedSavings=
-    totalIncome-totalExpense+
-    totalSavings;
+  const confidence =
+    records.length >=20
+      ?90
+      :records.length>=10
+      ?80
+      :60;
 
-  const weeklySpend=
-    Math.round(totalExpense/4);
+  function downloadReport(){
 
-  const downloadReport=()=>{
+    const text=`
+Financial Report
 
-    const report=`
+Income: £${totals.income}
+Expense: £${totals.expense}
+Savings: £${totals.savings}
+Loan: £${totals.loan}
 
-GLIZA FINANCIAL REPORT
+Health: ${health}/100
+Confidence:${confidence}%
 
-Income: £${totalIncome}
-
-Expense: £${totalExpense}
-
-Savings: £${totalSavings}
-
-Health:
-${financialHealth}/100
-
-Confidence:
-${confidence}%
-
-Predicted Savings:
-£${predictedSavings}
+Predicted:
+£${predicted}
 
 Transactions:
-${validation}
-
+${records.length}
 `;
 
     const blob=new Blob(
-      [report],
+      [text],
       {type:"text/plain"}
     );
 
-    const link=
-    document.createElement("a");
+    const a=
+      document.createElement("a");
 
-    link.href=
-    URL.createObjectURL(blob);
+    a.href=
+      URL.createObjectURL(blob);
 
-    link.download=
-    "Financial_Report.txt";
+    a.download=
+      "Financial_Report.txt";
 
-    link.click();
-  };
+    a.click();
+  }
+
+  function renderTable(label){
+
+    const data=
+      records.filter(
+        x=>x.type===label
+      );
+
+    return(
+      <>
+      <h3>{label}</h3>
+
+      <table
+      border="1"
+      width="100%"
+      cellPadding="8">
+
+      <thead>
+      <tr>
+      <th>Date</th>
+      <th>Time</th>
+      <th>Category</th>
+      <th>£</th>
+      </tr>
+      </thead>
+
+      <tbody>
+
+      {data.map(
+      (x,i)=>(
+
+      <tr key={i}>
+      <td>{x.date}</td>
+      <td>{x.time}</td>
+      <td>{x.category}</td>
+      <td>{x.amount}</td>
+      </tr>
+
+      ))}
+
+      </tbody>
+      </table>
+
+      <br/>
+      </>
+    )
+  }
 
   return(
-    <div style={{
-      maxWidth:"1000px",
-      margin:"auto",
-      padding:"30px",
-      fontFamily:"Arial"
-    }}>
+<div
+style={{
+maxWidth:"1100px",
+margin:"auto",
+padding:"30px",
+fontFamily:"Arial"
+}}
+>
 
 <h1>
 💰 Financial Monitoring System
 </h1>
 
-<p>
-Track daily spending smarter
-</p>
-
 <hr/>
 
 <h2>
-⚡ Daily Tracker
+Add Transaction
 </h2>
 
 <select
 value={type}
-onChange={(e)=>
-setType(e.target.value)}
+onChange={(e)=>{
+setType(e.target.value);
+setCategory("");
+}}
 >
+
 <option>Expense</option>
 <option>Income</option>
 <option>Savings</option>
 <option>Loan</option>
+
 </select>
 
 <select
 value={category}
 onChange={(e)=>
-setCategory(e.target.value)}
+setCategory(
+e.target.value
+)}
 >
 
 <option value="">
 Select Category
 </option>
 
-<option>Transportation</option>
-<option>Food</option>
-<option>Bills</option>
-<option>Shopping</option>
-<option>Health</option>
-<option>Education</option>
-<option>Other</option>
+{categories[type].map(
+x=>(
+<option key={x}>
+{x}
+</option>
+)
+)}
 
 </select>
 
 {category==="Other" && (
 
 <input
-placeholder="Custom category"
+placeholder="Other"
 value={customCategory}
 onChange={(e)=>
 setCustomCategory(
@@ -182,111 +276,68 @@ e.target.value
 type="date"
 value={date}
 onChange={(e)=>
-setDate(e.target.value)}
+setDate(
+e.target.value
+)}
+/>
+
+<input
+type="time"
+value={time}
+onChange={(e)=>
+setTime(
+e.target.value
+)}
 />
 
 <input
 type="number"
-placeholder="Amount (£)"
+placeholder="Amount £"
 value={amount}
 onChange={(e)=>
-setAmount(e.target.value)}
+setAmount(
+e.target.value
+)}
 />
 
 <button
 onClick={addTransaction}
 >
+
 Add
+
 </button>
 
 <hr/>
 
-<h2>
-📊 Financial Overview
-</h2>
+<h2>Overview</h2>
 
-<p>Income: £{totalIncome}</p>
-<p>Expense: £{totalExpense}</p>
-<p>Savings: £{totalSavings}</p>
+<p>Income: £{totals.income}</p>
+<p>Expense: £{totals.expense}</p>
+<p>Savings: £{totals.savings}</p>
+<p>Loan: £{totals.loan}</p>
 
 <p>
-Financial Health:
-{financialHealth}/100
+Health:
+{health}/100
 </p>
 
-<hr/>
-
-<h2>
-🤖 Forecast
-</h2>
-
 <p>
-AI Confidence:
+Confidence:
 {confidence}%
 </p>
 
 <p>
-Validation:
-{validation}
-transactions
-</p>
-
-<p>
-Predicted Savings:
-£{predictedSavings}/month
+Predicted:
+£{predicted}/month
 </p>
 
 <hr/>
 
-<h2>
-📈 Trends
-</h2>
-
-<p>
-Weekly Spend:
-£{weeklySpend}
-</p>
-
-<hr/>
-
-<h2>
-📄 Transactions
-</h2>
-
-<table
-border="1"
-width="100%"
-cellPadding="10"
->
-
-<thead>
-<tr>
-<th>Date</th>
-<th>Type</th>
-<th>Category</th>
-<th>Amount</th>
-</tr>
-</thead>
-
-<tbody>
-
-{records.map(
-(item,index)=>(
-
-<tr key={index}>
-<td>{item.date}</td>
-<td>{item.type}</td>
-<td>{item.category}</td>
-<td>£{item.amount}</td>
-</tr>
-
-))}
-
-</tbody>
-
-</table>
-
-<br/>
+{renderTable("Expense")}
+{renderTable("Income")}
+{renderTable("Savings")}
+{renderTable("Loan")}
 
 <button
 onClick={downloadReport}
@@ -297,4 +348,5 @@ onClick={downloadReport}
 </button>
 
 </div>
-)}
+)
+}
