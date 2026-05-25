@@ -333,7 +333,6 @@ const rows=[
 "Type",
 "Category",
 "Amount",
-"Goal",
 "Description"
 ]
 
@@ -348,7 +347,6 @@ t.date,
 t.type,
 t.category,
 t.amount,
-t.goal,
 t.description
 
 ]);
@@ -567,7 +565,11 @@ style={input}
 <option>Food</option>
 <option>Bills</option>
 <option>Shopping</option>
-
+<option>Conference</option>
+<option>Groceries</option>
+<option>Sponsorship</option>
+<option>LoanPayment</option>
+<option>Others</option>
 </select>
 
 
