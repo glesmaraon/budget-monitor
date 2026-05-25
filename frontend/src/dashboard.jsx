@@ -5,27 +5,31 @@ export default function Dashboard(){
 
 const [transactions,setTransactions]=useState([]);
 
-const [selectedDate,setSelectedDate]=useState(
-new Date().toISOString().split("T")[0]
-);
+const today=
+new Date()
+.toISOString()
+.split("T")[0];
+
+const [date,setDate]=useState(today);
 
 const [income,setIncome]=useState("");
 const [incomeType,setIncomeType]=useState("Salary");
 
-const [category,setCategory]=useState("Transportation");
 const [expense,setExpense]=useState("");
+const [category,setCategory]=useState("Transportation");
 
+const [loan,setLoan]=useState("");
 const [loanType,setLoanType]=useState("Student Loan");
-const [loanAmount,setLoanAmount]=useState("");
 
-const [savingGoal,setSavingGoal]=useState("");
+const [goal,setGoal]=useState("");
 const [description,setDescription]=useState("");
+
 
 useEffect(()=>{
 
 const saved=
 localStorage.getItem(
-"ai_transactions"
+"ai_finance_records"
 );
 
 if(saved){
@@ -42,63 +46,42 @@ JSON.parse(saved)
 
 function addTransaction(){
 
-const record={
+const item={
 
 id:Date.now(),
 
-date:selectedDate,
+date,
 
-income:Number(
-income||0
-),
-
+income:Number(income||0),
 incomeType,
 
+expense:Number(expense||0),
 category,
 
-expense:Number(
-expense||0
-),
-
-loan:Number(
-loanAmount||0
-),
-
+loan:Number(loan||0),
 loanType,
 
-goal:Number(
-savingGoal||0
-),
+goal:Number(goal||0),
 
 description
 
 };
 
-
 const updated=[
-
-record,
+item,
 ...transactions
-
 ];
 
-
-setTransactions(
-updated
-);
+setTransactions(updated);
 
 localStorage.setItem(
-
-"ai_transactions",
-
-JSON.stringify(
-updated
-)
-
+"ai_finance_records",
+JSON.stringify(updated)
 );
 
-
+setIncome("");
 setExpense("");
+setLoan("");
 setDescription("");
 
 }
@@ -108,38 +91,25 @@ setDescription("");
 const totalIncome=
 
 transactions.reduce(
-
-(sum,t)=>
-
-sum+
-t.income
-
-,0);
+(a,b)=>a+b.income,
+0
+);
 
 
 const totalExpenses=
 
 transactions.reduce(
-
-(sum,t)=>
-
-sum+
-t.expense
-
-,0);
-
+(a,b)=>a+b.expense,
+0
+);
 
 
 const totalLoan=
 
 transactions.reduce(
-
-(sum,t)=>
-
-sum+
-t.loan
-
-,0);
+(a,b)=>a+b.loan,
+0
+);
 
 
 const balance=
@@ -149,7 +119,8 @@ totalExpenses-
 totalLoan;
 
 
-const avg=
+
+const avgSpend=
 
 transactions.length
 
@@ -161,28 +132,51 @@ transactions.length
 :0;
 
 
+
 const projected=
 
 Math.round(
-avg*30
+avgSpend*30
 );
+
 
 
 const confidence=
 
 transactions.length>20
-
 ?95
-
 :transactions.length>10
-
 ?90
-
 :transactions.length>5
-
 ?82
+:60;
 
-:65;
+
+
+let trend="";
+
+if(
+transactions.length<3
+){
+
+trend=
+"Learning spending behavior";
+
+}else if(
+projected>
+(totalIncome*.7)
+){
+
+trend=
+"Expenses increasing from recent activity";
+
+}else{
+
+trend=
+"Stable spending pattern detected";
+
+}
+
 
 
 let recommendation="";
@@ -195,40 +189,36 @@ recommendation=
 }
 
 else if(
-
 projected>
-
-totalIncome*.8
-
+(totalIncome*.8)
 ){
 
 recommendation=
-"Reduce optional spending.";
+"Reduce transport and optional spending";
 
 }
 
 else{
 
 recommendation=
-"Current spending pattern sustainable";
+"Current financial pattern is healthy";
 
 }
 
 
+
 const months=
 
-savingGoal && balance>0
+goal && balance>0
 
 ?
 
 Math.ceil(
-savingGoal/
+goal/
 balance
 )
 
-:
-
-"Unknown";
+:"Need more data";
 
 
 
@@ -239,9 +229,12 @@ const rows=[
 [
 "Date",
 "Income",
+"Income Type",
 "Expense",
-"Loan",
 "Category",
+"Loan",
+"Loan Type",
+"Savings Goal",
 "Description"
 ]
 
@@ -254,9 +247,12 @@ rows.push([
 
 t.date,
 t.income,
+t.incomeType,
 t.expense,
-t.loan,
 t.category,
+t.loan,
+t.loanType,
+t.goal,
 t.description
 
 ]);
@@ -265,14 +261,15 @@ t.description
 
 
 const ws=
-XLSX.utils.aoa_to_sheet(
-rows
-);
+XLSX.utils
+.aoa_to_sheet(rows);
 
 const wb=
-XLSX.utils.book_new();
+XLSX.utils
+.book_new();
 
-XLSX.utils.book_append_sheet(
+XLSX.utils
+.book_append_sheet(
 wb,
 ws,
 "Transactions"
@@ -280,7 +277,7 @@ ws,
 
 XLSX.writeFile(
 wb,
-"Transactions_Report.xlsx"
+"AI_Financial_Report.xlsx"
 );
 
 }
@@ -292,9 +289,9 @@ const input={
 width:"100%",
 padding:"15px",
 border:"1px solid #ddd",
-borderRadius:"18px",
-fontSize:"16px",
-marginTop:"10px"
+borderRadius:"15px",
+marginTop:"10px",
+fontSize:"15px"
 
 };
 
@@ -302,19 +299,23 @@ marginTop:"10px"
 
 return(
 
-<div style={{
-background:"#F4F6FB",
+<div
+style={{
+background:"#F3F6FB",
 padding:"30px",
 minHeight:"100vh",
 fontFamily:"Arial"
-}}>
+}}
+>
 
-<div style={{
-background:"#081326",
-padding:"35px",
+<div
+style={{
+background:"#07152D",
+padding:"40px",
 borderRadius:"25px",
 color:"white"
-}}>
+}}
+>
 
 <h1>
 🤖 AI Saving Companion
@@ -328,7 +329,8 @@ Track • Analyze • Predict • Improve
 
 
 
-<div style={{
+<div
+style={{
 display:"grid",
 gridTemplateColumns:
 "repeat(4,1fr)",
@@ -368,17 +370,12 @@ background:"white",
 padding:"30px",
 borderRadius:"25px",
 boxShadow:
-"0 4px 10px rgba(0,0,0,.08)"
+"0 4px 12px rgba(0,0,0,.08)"
 }}
 >
 
-<h2>
-{card.title}
-</h2>
-
-<h1>
-{card.value}
-</h1>
+<h2>{card.title}</h2>
+<h1>{card.value}</h1>
 
 </div>
 
@@ -390,7 +387,8 @@ boxShadow:
 
 
 
-<div style={{
+<div
+style={{
 background:"white",
 padding:"30px",
 marginTop:"30px",
@@ -403,7 +401,8 @@ borderRadius:"25px"
 </h1>
 
 
-<div style={{
+<div
+style={{
 display:"grid",
 gridTemplateColumns:
 "repeat(4,1fr)",
@@ -411,28 +410,20 @@ gap:"20px"
 }}
 >
 
-
 <div>
 
 <h3>💼 Income</h3>
 
 <input
-placeholder="Base Income (£)"
+placeholder="Income (£)"
 value={income}
-onChange={(e)=>
-setIncome(
-e.target.value
-)}
+onChange={(e)=>setIncome(e.target.value)}
 style={input}
 />
 
-
 <select
 value={incomeType}
-onChange={(e)=>
-setIncomeType(
-e.target.value
-)}
+onChange={(e)=>setIncomeType(e.target.value)}
 style={input}
 >
 
@@ -452,10 +443,7 @@ style={input}
 
 <select
 value={category}
-onChange={(e)=>
-setCategory(
-e.target.value
-)}
+onChange={(e)=>setCategory(e.target.value)}
 style={input}
 >
 
@@ -470,10 +458,7 @@ style={input}
 <input
 placeholder="Expense (£)"
 value={expense}
-onChange={(e)=>
-setExpense(
-e.target.value
-)}
+onChange={(e)=>setExpense(e.target.value)}
 style={input}
 />
 
@@ -487,10 +472,7 @@ style={input}
 
 <select
 value={loanType}
-onChange={(e)=>
-setLoanType(
-e.target.value
-)}
+onChange={(e)=>setLoanType(e.target.value)}
 style={input}
 >
 
@@ -503,11 +485,8 @@ style={input}
 
 <input
 placeholder="Loan (£)"
-value={loanAmount}
-onChange={(e)=>
-setLoanAmount(
-e.target.value
-)}
+value={loan}
+onChange={(e)=>setLoan(e.target.value)}
 style={input}
 />
 
@@ -521,22 +500,15 @@ style={input}
 
 <input
 placeholder="Savings Goal (£)"
-value={savingGoal}
-onChange={(e)=>
-setSavingGoal(
-e.target.value
-)}
+value={goal}
+onChange={(e)=>setGoal(e.target.value)}
 style={input}
 />
-
 
 <input
 placeholder="Description"
 value={description}
-onChange={(e)=>
-setDescription(
-e.target.value
-)}
+onChange={(e)=>setDescription(e.target.value)}
 style={input}
 />
 
@@ -546,7 +518,8 @@ style={input}
 
 
 
-<div style={{
+<div
+style={{
 display:"flex",
 gap:"20px",
 marginTop:"25px"
@@ -555,11 +528,8 @@ marginTop:"25px"
 
 <input
 type="date"
-value={selectedDate}
-onChange={(e)=>
-setSelectedDate(
-e.target.value
-)}
+value={date}
+onChange={(e)=>setDate(e.target.value)}
 style={{
 ...input,
 flex:1
@@ -570,10 +540,10 @@ flex:1
 <button
 onClick={addTransaction}
 style={{
-background:"#081326",
+background:"#07152D",
 color:"white",
+padding:"15px 50px",
 border:"none",
-padding:"15px 45px",
 borderRadius:"20px",
 cursor:"pointer",
 fontWeight:"bold"
@@ -590,12 +560,13 @@ fontWeight:"bold"
 
 
 
-<div style={{
-background:"#081326",
+<div
+style={{
+background:"#07152D",
 color:"white",
 padding:"30px",
-marginTop:"30px",
-borderRadius:"25px"
+borderRadius:"25px",
+marginTop:"30px"
 }}
 >
 
@@ -603,38 +574,21 @@ borderRadius:"25px"
 🤖 AI Forecast & Recommendation
 </h2>
 
-<p>
-Trend:
-Expenses increasing from recent activity
-</p>
+<p><b>Trend:</b><br/>{trend}</p>
 
-<p>
-Prediction:
+<p><b>Prediction:</b><br/>
 Projected monthly spending £{projected}
 </p>
 
-<p>
-Recommendation:
+<p><b>Recommendation:</b><br/>
 {recommendation}
 </p>
 
-<p>
-Savings Goal:
-{
-months==="Unknown"
-
-?
-
-"Need more history"
-
-:
-
-`Estimated completion ${months} months`
-}
+<p><b>Savings Goal:</b><br/>
+Estimated completion: {months}
 </p>
 
-<p>
-AI Confidence:
+<p><b>AI Confidence:</b><br/>
 {confidence}%
 </p>
 
@@ -642,21 +596,30 @@ AI Confidence:
 
 
 
-<div style={{
+<div
+style={{
 background:"white",
 padding:"25px",
-marginTop:"30px",
-borderRadius:"25px"
+borderRadius:"25px",
+marginTop:"30px"
 }}
 >
 
 <button
 onClick={exportExcel}
+style={{
+background:"#0F766E",
+color:"white",
+padding:"12px 20px",
+border:"none",
+borderRadius:"10px"
+}}
 >
 
 ⬇ Download Report
 
 </button>
+
 
 <table
 width="100%"
@@ -671,7 +634,10 @@ marginTop:"20px"
 <tr>
 
 <th>Date</th>
+<th>Income</th>
 <th>Expense</th>
+<th>Loan</th>
+<th>Goal</th>
 <th>Category</th>
 <th>Description</th>
 
@@ -679,19 +645,19 @@ marginTop:"20px"
 
 </thead>
 
+
 <tbody>
 
 {
-
 transactions.length===0
 
 ?
 
 <tr>
 
-<td colSpan="4">
+<td colSpan="7">
 
-No records
+No records available
 
 </td>
 
@@ -704,7 +670,10 @@ transactions.map(t=>(
 <tr key={t.id}>
 
 <td>{t.date}</td>
+<td>£{t.income}</td>
 <td>£{t.expense}</td>
+<td>£{t.loan}</td>
+<td>£{t.goal}</td>
 <td>{t.category}</td>
 <td>{t.description}</td>
 
