@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 export default function Dashboard() {
 
 const [tab,setTab]=useState("Home");
+
+const [goal,setGoal]=useState(2400);
 
 const [type,setType]=useState("Expense");
 
@@ -22,6 +24,32 @@ new Date().toTimeString().slice(0,5)
 
 const [records,setRecords]=useState([]);
 
+useEffect(()=>{
+
+const saved=
+localStorage.getItem(
+"transactions"
+);
+
+if(saved){
+
+setRecords(
+JSON.parse(saved)
+);
+
+}
+
+},[]);
+
+useEffect(()=>{
+
+localStorage.setItem(
+"transactions",
+JSON.stringify(records)
+);
+
+},[records]);
+
 const categories={
 
 Expense:[
@@ -38,15 +66,15 @@ Expense:[
 Income:[
 "Salary",
 "Allowance",
-"Freelance",
 "Bonus",
+"Freelance",
 "Other"
 ],
 
 Savings:[
 "Emergency Fund",
-"Investment",
 "Travel",
+"Investment",
 "Other"
 ],
 
@@ -61,8 +89,10 @@ Loan:[
 
 function addTransaction(){
 
-if(!category || !amount)
-return;
+if(
+!category||
+!amount
+)return;
 
 const finalCategory=
 
@@ -72,26 +102,31 @@ category==="Other"
 
 :category;
 
-setRecords([
-...records,
-{
+const item={
 
 type,
 
-category:finalCategory,
+category:
+finalCategory,
 
-amount:Number(amount),
+amount:
+Number(amount),
 
 date,
 
 time
 
-}
+};
 
+setRecords([
+...records,
+item
 ]);
 
 setCategory("");
+
 setCustomCategory("");
+
 setAmount("");
 
 }
@@ -144,53 +179,45 @@ x=>x.type==="Loan"
 
 },[records]);
 
-const validation=
-records.length;
+const monthlyGoal=
+Math.round(
+goal/12
+);
 
-const health=
-Math.max(
-0,
+const predictedYear=
+
+totals.savings*12;
+
+const achievement=
+
 Math.min(
 100,
-
 Math.round(
-(
-(totals.income-
-totals.expense)
-/
-(totals.income||1)
-)*100
-)
+(predictedYear/
+goal)*100
 )
 );
+
+const validation=
+records.length;
 
 const confidence=
 
 validation>=20
-
 ?90
-
 :validation>=10
-
 ?80
-
 :60;
 
 const reality=
-
 validation>=20
-
 ?85
-
 :70;
 
-const predicted=
-
-totals.income-
-
-totals.expense+
-
-totals.savings;
+const weeklySpend=
+Math.round(
+totals.expense/4
+);
 
 const savingsRate=
 
@@ -200,100 +227,76 @@ totals.income
 
 Math.round(
 
-(totals.savings/
-
-totals.income)
-
-*100
-
+(
+totals.savings/
+totals.income
+)*100
 )
 
 :0;
 
-const weeklySpend=
-
-Math.round(
-totals.expense/4
-);
-
 const netBalance=
 
 totals.income-
-
 totals.expense;
-
-const topCategory=
-
-records.length
-
-?
-
-records[records.length-1]
-.category
-
-:"No data";
 
 const aiCoach=
 
-predicted<100
+achievement<50
 
-?"Save £5/day to improve monthly outcome"
+?
 
-:"Great progress. Continue consistency 🎉";
+`You may miss your yearly goal.
+Reduce spending by £${Math.max(
+1,
+Math.round(
+(monthlyGoal-
+totals.savings)/30
+)
+)}/day.`
+
+:
+
+"You're progressing well 🎉";
 
 function downloadReport(){
 
-const report=`
+const report=
 
-GLIZA FINANCIAL REPORT
+records.map(
 
-Income:
-£${totals.income}
+x=>
 
-Expense:
-£${totals.expense}
+`${x.date},
 
-Savings:
-£${totals.savings}
+${x.time},
 
-Loan:
-£${totals.loan}
+${x.type},
 
-Health:
-${health}/100
+${x.category},
 
-Confidence:
-${confidence}%
+£${x.amount}`
 
-Reality:
-${reality}%
-
-Prediction:
-£${predicted}
-
-Transactions:
-${validation}
-
-`;
+).join("\n");
 
 const blob=
 new Blob(
 [report],
-{
-type:"text/plain"
-}
+{type:"text/plain"}
 );
 
-const link=
+const a=
 document.createElement("a");
 
-link.href=
-URL.createObjectURL(blob);
+a.href=
+URL.createObjectURL(
+blob
+);
 
-link.download=
-"Financial_Report.txt";
+a.download=
+"Transactions_Report.txt";
 
-link.click();
+a.click();
 
 }
 
@@ -306,7 +309,16 @@ x=>x.type===name
 
 return(
 
-<>
+<div
+style={{
+background:"white",
+padding:"20px",
+borderRadius:"15px",
+boxShadow:
+"0 2px 10px lightgray",
+marginBottom:"20px"
+}}
+>
 
 <h3>
 {name}
@@ -314,8 +326,8 @@ Records
 </h3>
 
 <table
-border="1"
 width="100%"
+border="1"
 cellPadding="8"
 >
 
@@ -324,8 +336,11 @@ cellPadding="8"
 <tr>
 
 <th>Date</th>
+
 <th>Time</th>
+
 <th>Category</th>
+
 <th>£</th>
 
 </tr>
@@ -334,10 +349,8 @@ cellPadding="8"
 
 <tbody>
 
-{
-
-data.map(
-(item,index)=>(
+{data.map(
+(item,index)=>
 
 <tr key={index}>
 
@@ -359,17 +372,13 @@ data.map(
 
 </tr>
 
-))
-
-}
+)}
 
 </tbody>
 
 </table>
 
-<br/>
-
-</>
+</div>
 
 )
 
@@ -379,19 +388,23 @@ return(
 
 <div style={{
 
-maxWidth:"1200px",
-
-margin:"auto",
-
 padding:"30px",
+
+background:"#f5f8fc",
+
+minHeight:"100vh",
 
 fontFamily:"Arial"
 
 }}>
 
 <h1>
-💰 Financial Monitoring System
+💰 Personal Financial Monitoring
 </h1>
+
+<p>
+Track smarter with AI guidance
+</p>
 
 <button
 onClick={()=>
@@ -415,13 +428,88 @@ Summary
 
 <hr/>
 
-{tab==="Home" && (
+{tab==="Home"&&(
 
 <>
+
+<div
+style={{
+display:"flex",
+gap:"20px",
+flexWrap:"wrap"
+}}
+>
+
+<div style={{
+background:"white",
+padding:"20px",
+borderRadius:"15px",
+flex:"1"
+}}>
+
+💵 Income
+
+<h2>
+£{totals.income}
+</h2>
+
+</div>
+
+<div style={{
+background:"white",
+padding:"20px",
+borderRadius:"15px",
+flex:"1"
+}}>
+
+📉 Expenses
+
+<h2>
+£{totals.expense}
+</h2>
+
+</div>
+
+<div style={{
+background:"white",
+padding:"20px",
+borderRadius:"15px",
+flex:"1"
+}}>
+
+💰 Savings
+
+<h2>
+£{totals.savings}
+</h2>
+
+</div>
+
+</div>
+
+<br/>
+
+<div style={{
+background:"white",
+padding:"20px",
+borderRadius:"15px"
+}}>
 
 <h2>
 ⚡ Quick Entry
 </h2>
+
+<input
+type="number"
+placeholder="Savings Goal / Year (£)"
+value={goal}
+onChange={(e)=>
+setGoal(
+e.target.value
+)}
+/>
+
+<br/><br/>
 
 <select
 value={type}
@@ -436,21 +524,13 @@ setCategory("");
 }}
 >
 
-<option>
-Expense
-</option>
+<option>Expense</option>
 
-<option>
-Income
-</option>
+<option>Income</option>
 
-<option>
-Savings
-</option>
+<option>Savings</option>
 
-<option>
-Loan
-</option>
+<option>Loan</option>
 
 </select>
 
@@ -459,8 +539,7 @@ value={category}
 onChange={(e)=>
 setCategory(
 e.target.value
-)
-}
+)}
 >
 
 <option>
@@ -469,16 +548,12 @@ Select Category
 
 {
 categories[type]
-.map(x=>
+.map(
+x=>
 
-<option
-key={x}
->
-
+<option key={x}>
 {x}
-
 </option>
-
 )
 
 }
@@ -488,20 +563,13 @@ key={x}
 {category==="Other"&&(
 
 <input
-
-placeholder=
-"Other"
-
-value=
-{customCategory}
-
+placeholder="Other"
+value={customCategory}
 onChange={(e)=>
-
 setCustomCategory(
 e.target.value
 )}
-
- />
+/>
 
 )}
 
@@ -525,7 +593,7 @@ e.target.value
 
 <input
 type="number"
-placeholder="£"
+placeholder="Amount £"
 value={amount}
 onChange={(e)=>
 setAmount(
@@ -543,20 +611,28 @@ Add
 
 </button>
 
-<hr/>
+</div>
+
+<br/>
+
+<div style={{
+background:"white",
+padding:"20px",
+borderRadius:"15px"
+}}>
 
 <h2>
 🤖 AI Prediction Analysis
 </h2>
 
 <p>
-Health:
-{health}/100
+Goal Achievement:
+{achievement}%
 </p>
 
 <p>
-Success:
-{health}%
+Predicted Year-End:
+£{predictedYear}
 </p>
 
 <p>
@@ -576,24 +652,19 @@ transactions
 </p>
 
 <p>
-
-Prediction:
-
-£{predicted}
-
-next 30 days
-
-</p>
-
-<p>
-
 AI Coach:
-
 {aiCoach}
-
 </p>
 
-<hr/>
+</div>
+
+<br/>
+
+<div style={{
+background:"white",
+padding:"20px",
+borderRadius:"15px"
+}}>
 
 <h2>
 📈 Trends
@@ -614,12 +685,9 @@ Net Balance:
 £{netBalance}
 </p>
 
-<p>
-Top Category:
-{topCategory}
-</p>
+</div>
 
-<hr/>
+<br/>
 
 <button
 onClick={
@@ -635,35 +703,9 @@ downloadReport
 
 )}
 
-{tab==="Summary" && (
+{tab==="Summary"&&(
 
 <>
-
-<h2>
-📊 Dashboard Summary
-</h2>
-
-<p>
-Income:
-£{totals.income}
-</p>
-
-<p>
-Expense:
-£{totals.expense}
-</p>
-
-<p>
-Savings:
-£{totals.savings}
-</p>
-
-<p>
-Loan:
-£{totals.loan}
-</p>
-
-<hr/>
 
 {renderTable(
 "Expense"
