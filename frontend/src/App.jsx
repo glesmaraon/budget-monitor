@@ -1,2 +1,7 @@
-import Dashboard from "./dashboard"; 
-export default function App(){return <dashboard/>}
+import Dashboard from "./dashboard";
+
+function App() {
+  return <dashboard />;
+}
+
+export default App;
