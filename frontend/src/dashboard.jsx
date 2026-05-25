@@ -8,27 +8,17 @@ const [records,setRecords]=useState([]);
 const [income,setIncome]=useState("");
 const [savingGoal,setSavingGoal]=useState("");
 
-const [loanType,setLoanType]=
-useState("Student Loan");
+const [loanType,setLoanType]=useState("Student Loan");
+const [loan,setLoan]=useState("");
 
-const [loan,setLoan]=
-useState("");
-
-const [expense,setExpense]=
-useState("");
-
-const [category,setCategory]=
-useState("Transportation");
-
-const [description,setDescription]=
-useState("");
-
+const [expense,setExpense]=useState("");
+const [category,setCategory]=useState("Transportation");
+const [description,setDescription]=useState("");
 
 
 useEffect(()=>{
 
 const saved=
-
 localStorage.getItem(
 "finance_records"
 );
@@ -57,36 +47,25 @@ date:
 new Date()
 .toLocaleDateString(),
 
-time:
-new Date()
-.toLocaleTimeString(),
-
-category,
-
 expense:
 Number(expense),
+
+category,
 
 description
 
 };
 
 const updated=[
-
 ...records,
 item
-
 ];
 
 setRecords(updated);
 
 localStorage.setItem(
-
 "finance_records",
-
-JSON.stringify(
-updated
-)
-
+JSON.stringify(updated)
 );
 
 setExpense("");
@@ -96,41 +75,142 @@ setDescription("");
 
 
 
-function downloadSpreadsheet(){
+const totalExpenses=
 
-if(records.length===0){
-
-alert(
-"No records to export"
+records.reduce(
+(sum,item)=>
+sum+
+item.expense
+,0
 );
 
-return;
+
+
+const balance=
+
+Number(income||0)
+
+-
+
+totalExpenses
+
+-
+
+Number(loan||0);
+
+
+
+function recommendation(){
+
+if(balance<0){
+
+return "⚠ High spending detected. Reduce optional purchases and transportation costs.";
 
 }
 
+if(
+
+Number(loan)
+>
+
+Number(income)*0.5
+
+){
+
+return "📉 Loan burden is high. Focus on reducing debt before increasing savings.";
+
+}
+
+if(
+
+savingGoal>
+
+income
+
+){
+
+return "🎯 Savings target may be unrealistic based on current cashflow.";
+
+}
+
+if(records.length>5){
+
+return "📈 Spending behavior looks stable. Continue daily monitoring.";
+
+}
+
+return "Collect more daily records for stronger forecasting.";
+
+}
+
+
+
+function forecast(){
+
+if(records.length===0){
+
+return "No prediction yet";
+
+}
+
+const average=
+
+totalExpenses
+/
+records.length;
+
+
+const future=
+
+Math.round(
+average*30
+);
+
+
+return `Predicted monthly spending: £${future}`;
+
+}
+
+
+
+const confidence=
+
+records.length>15
+
+?96
+
+:records.length>8
+
+?90
+
+:75;
+
+
+
+function downloadSpreadsheet(){
 
 const rows=[
 
 [
 "Date",
-"Time",
 "Category",
 "Expense",
 "Description",
 "Loan Type",
-"Balance"
+"Balance",
+"Forecast"
 ]
 
 ];
 
 
-records.forEach(item=>{
+records.forEach(
+
+item=>{
 
 rows.push([
 
 item.date,
-
-item.time,
 
 item.category,
 
@@ -140,132 +220,37 @@ item.description,
 
 loanType,
 
-balance
+balance,
 
-]);
+forecast()
 
-});
+])
 
-
-const sheet=
-
-XLSX.utils
-.aoa_to_sheet(
-rows
-);
-
-
-const workbook=
-
-XLSX.utils
-.book_new();
-
-
-XLSX.utils
-.book_append_sheet(
-
-workbook,
-sheet,
-"Financial"
+}
 
 );
 
+
+const ws=
+
+XLSX.utils
+.aoa_to_sheet(rows);
+
+const wb=
+XLSX.utils.book_new();
+
+XLSX.utils.book_append_sheet(
+wb,
+ws,
+"Financial Report"
+);
 
 XLSX.writeFile(
-
-workbook,
-
+wb,
 "Financial_Report.xlsx"
-
 );
 
 }
-
-
-
-const totalExpenses=
-
-records.reduce(
-
-(sum,r)=>
-
-sum+
-Number(
-r.expense||0
-),
-
-0
-
-);
-
-
-const balance=
-
-Number(
-income||0
-)
-
--
-
-totalExpenses
-
--
-
-Number(
-loan||0
-);
-
-
-
-function recommendation(){
-
-if(balance<0){
-
-return
-"⚠ Overspending detected. Reduce optional spending.";
-
-}
-
-if(
-
-Number(loan)
-
->
-
-Number(income)*0.5
-
-){
-
-return
-"📉 Loan burden is affecting future savings.";
-
-}
-
-if(records.length>5){
-
-return
-"📈 Spending pattern stable. Savings target remains achievable.";
-
-}
-
-return
-"Collect more daily data for stronger forecasting.";
-
-}
-
-
-
-const confidence=
-
-records.length>10
-
-?95
-
-:records.length>5
-
-?88
-
-:70;
 
 
 
@@ -283,9 +268,9 @@ fontFamily:"Arial"
 <div
 style={{
 background:"#111827",
-color:"white",
-padding:"30px",
-borderRadius:"20px"
+padding:"35px",
+borderRadius:"20px",
+color:"white"
 }}
 >
 
@@ -297,7 +282,7 @@ borderRadius:"20px"
 
 <p>
 
-Personal Budget & Expense Monitoring System
+Smart Budget Monitoring Platform
 
 </p>
 
@@ -307,19 +292,13 @@ Personal Budget & Expense Monitoring System
 
 <div
 style={{
-
 display:"grid",
-
 gridTemplateColumns:
 "repeat(auto-fit,minmax(220px,1fr))",
-
 gap:"20px",
-
 marginTop:"25px"
-
 }}
 >
-
 
 {[
 
@@ -343,23 +322,16 @@ title:"💰 Balance",
 value:`£${balance}`
 }
 
-].map(
-
-(card,index)=>(
+].map((card,i)=>(
 
 <div
-key={index}
+key={i}
 style={{
-
 background:"white",
-
 padding:"25px",
-
-borderRadius:"18px",
-
+borderRadius:"20px",
 boxShadow:
-"0 4px 12px rgba(0,0,0,.08)"
-
+"0 4px 15px rgba(0,0,0,.08)"
 }}
 >
 
@@ -377,9 +349,7 @@ boxShadow:
 
 </div>
 
-)
-
-)
+))
 
 }
 
@@ -390,11 +360,9 @@ boxShadow:
 <div
 style={{
 background:"white",
-padding:"25px",
+padding:"30px",
 marginTop:"25px",
-borderRadius:"18px",
-boxShadow:
-"0 4px 12px rgba(0,0,0,.08)"
+borderRadius:"20px"
 }}
 >
 
@@ -404,214 +372,92 @@ boxShadow:
 
 </h2>
 
+<div
+style={{
+display:"grid",
+gridTemplateColumns:
+"repeat(auto-fit,minmax(250px,1fr))",
+gap:"15px"
+}}
+>
 
 <input
-
 type="number"
-
 placeholder="Income (£)"
-
 value={income}
-
-onChange={(e)=>
-
-setIncome(
-e.target.value
-)
-
-}
-
-style={{
-margin:"5px"
-}}
-
+onChange={(e)=>setIncome(e.target.value)}
 />
-
 
 <input
-
 type="number"
-
-placeholder=
-"Savings Goal"
-
-value=
-{savingGoal}
-
-onChange={(e)=>
-
-setSavingGoal(
-e.target.value
-)
-
-}
-
-style={{
-margin:"5px"
-}}
-
+placeholder="Savings Goal (£)"
+value={savingGoal}
+onChange={(e)=>setSavingGoal(e.target.value)}
 />
 
-
-<br/><br/>
-
-
 <select
-
 value={loanType}
-
-onChange={(e)=>
-
-setLoanType(
-e.target.value
-)
-
-}
-
+onChange={(e)=>setLoanType(e.target.value)}
 >
 
-<option>
-Student Loan
-</option>
-
-<option>
-Credit Card
-</option>
-
-<option>
-Personal Loan
-</option>
-
-<option>
-Mortgage
-</option>
-
-<option>
-Car Loan
-</option>
-
-<option>
-Family Loan
-</option>
-
-<option>
-Other
-</option>
+<option>Student Loan</option>
+<option>Credit Card</option>
+<option>Personal Loan</option>
+<option>Mortgage</option>
+<option>Car Loan</option>
+<option>Family Loan</option>
+<option>Other</option>
 
 </select>
 
-
 <input
-
 type="number"
-
-placeholder=
-"Loan Amount"
-
-value=
-{loan}
-
-onChange={(e)=>
-
-setLoan(
-e.target.value
-)
-
-}
-
+placeholder="Loan Amount"
+value={loan}
+onChange={(e)=>setLoan(e.target.value)}
 />
-
-
-<br/><br/>
-
 
 <select
-
 value={category}
-
-onChange={(e)=>
-
-setCategory(
-e.target.value
-)
-
-}
-
+onChange={(e)=>setCategory(e.target.value)}
 >
 
-<option>
-Transportation
-</option>
-
-<option>
-Food
-</option>
-
-<option>
-Bills
-</option>
-
-<option>
-Travel
-</option>
-
-<option>
-Shopping
-</option>
+<option>Transportation</option>
+<option>Food</option>
+<option>Bills</option>
+<option>Travel</option>
+<option>Shopping</option>
 
 </select>
 
-
 <input
-
 type="number"
-
-placeholder=
-"Expense (£)"
-
-value=
-{expense}
-
-onChange={(e)=>
-
-setExpense(
-e.target.value
-)
-
-}
-
+placeholder="Expense (£)"
+value={expense}
+onChange={(e)=>setExpense(e.target.value)}
 />
-
 
 <input
-
-placeholder=
-"Description"
-
-value=
-{description}
-
-onChange={(e)=>
-
-setDescription(
-e.target.value
-)
-
-}
-
+placeholder="Description"
+value={description}
+onChange={(e)=>setDescription(e.target.value)}
 />
-
 
 <button
 onClick={addExpense}
 style={{
-marginLeft:"10px"
+background:"#111827",
+color:"white",
+border:"none",
+borderRadius:"10px"
 }}
 >
 
-Add Expense
++ Add Expense
 
 </button>
+
+</div>
 
 </div>
 
@@ -622,17 +468,21 @@ style={{
 background:"white",
 padding:"25px",
 marginTop:"25px",
-borderRadius:"18px",
-boxShadow:
-"0 4px 12px rgba(0,0,0,.08)"
+borderRadius:"20px"
 }}
 >
 
 <h2>
 
-🤖 Forecast & Recommendation
+🤖 Forecasting & Recommendation
 
 </h2>
+
+<p>
+
+{forecast()}
+
+</p>
 
 <p>
 
@@ -656,27 +506,12 @@ style={{
 background:"white",
 padding:"25px",
 marginTop:"25px",
-borderRadius:"18px",
-boxShadow:
-"0 4px 12px rgba(0,0,0,.08)"
+borderRadius:"20px"
 }}
 >
 
-<h2>
-
-📄 Daily Spend Records
-
-</h2>
-
-
 <button
-
 onClick={downloadSpreadsheet}
-
-style={{
-marginBottom:"15px"
-}}
-
 >
 
 ⬇ Download Spreadsheet
@@ -687,7 +522,10 @@ marginBottom:"15px"
 <table
 width="100%"
 border="1"
-cellPadding="10"
+cellPadding="8"
+style={{
+marginTop:"15px"
+}}
 >
 
 <thead>
@@ -695,8 +533,11 @@ cellPadding="10"
 <tr>
 
 <th>Date</th>
+
 <th>Category</th>
+
 <th>Expense</th>
+
 <th>Description</th>
 
 </tr>
