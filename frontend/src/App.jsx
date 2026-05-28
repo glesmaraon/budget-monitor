@@ -1,7 +1,7 @@
-```jsx id="l6w3ws"
+```jsx id="hix86e"
 export default function App() {
   return (
-    <div>
+    <div style={{ padding: "40px" }}>
       <h1>WORKING 🚀</h1>
     </div>
   );
