@@ -1,9 +1,12 @@
-import Dashboard from "./dashboard";
+```jsx
+import React from "react";
 
-function App() {
+export default function App() {
   return (
-    <Dashboard />
+    <div style={{ padding: "40px" }}>
+      <h1>AI Financial Habit Intelligence Platform</h1>
+      <p>Frontend is working successfully 🚀</p>
+    </div>
   );
 }
-
-export default App;
+```
