@@ -1,828 +1,627 @@
-import React,{useState,useEffect} from "react";
-import * as XLSX from "xlsx";
+```jsx
+import React, {
+useEffect,
+useMemo,
+useState
+} from "react";
+
+import {
+ResponsiveContainer,
+LineChart,
+Line,
+CartesianGrid,
+XAxis,
+YAxis,
+Tooltip,
+PieChart,
+Pie,
+Cell
+} from "recharts";
 
 export default function Dashboard(){
 
-const today=
-new Date()
-.toISOString()
-.split("T")[0];
+const [records,setRecords]=useState([]);
 
-const [transactions,setTransactions]=useState([]);
+const [page,setPage]=useState(1);
 
-const [date,setDate]=useState(today);
+const recordsPerPage=10;
 
-const [income,setIncome]=useState("");
-const [incomeType,setIncomeType]=useState("Salary");
+const [form,setForm]=useState({
 
-const [expense,setExpense]=useState("");
-const [category,setCategory]=useState("Transportation");
+date:"",
+type:"Expense",
+category:"",
+amount:""
 
-const [loan,setLoan]=useState("");
-const [loanType,setLoanType]=useState("Student Loan");
-
-const [goal,setGoal]=useState("");
-const [description,setDescription]=useState("");
-
-
+});
 
 useEffect(()=>{
 
-const saved=
+const savedRecords=
 localStorage.getItem(
-"finance_diary"
+"financialRecords"
 );
 
-if(saved){
+if(savedRecords){
 
-setTransactions(
-JSON.parse(saved)
+setRecords(
+JSON.parse(savedRecords)
 );
 
 }
 
 },[]);
 
+useEffect(()=>{
 
+localStorage.setItem(
+
+"financialRecords",
+
+JSON.stringify(records)
+
+);
+
+},[records]);
+
+function handleChange(e){
+
+setForm({
+
+...form,
+
+[e.target.name]:e.target.value
+
+});
+
+}
 
 function addTransaction(){
 
-let type="";
-let amount=0;
-let label="";
+if(
 
+!form.date ||
+!form.category ||
+!form.amount
 
-if(Number(income)>0){
-
-type="Income";
-amount=Number(income);
-label=incomeType;
-
-}
-
-else if(
-Number(expense)>0
 ){
 
-type="Expense";
-
-amount=
-Number(expense);
-
-label=
-category;
-
-}
-
-else if(
-Number(loan)>0
-){
-
-type="Loan";
-
-amount=
-Number(loan);
-
-label=
-loanType;
-
-}
-
-else{
-
-alert(
-"Enter transaction first"
-);
+alert("Please complete all fields.");
 
 return;
 
 }
 
+if(Number(form.amount)<=0){
 
+alert("Amount must be greater than zero.");
 
-const item={
+return;
+
+}
+
+const duplicate=records.find(item=>
+
+item.date===form.date &&
+item.category===form.category &&
+Number(item.amount)===Number(form.amount)
+
+);
+
+if(duplicate){
+
+const proceed=window.confirm(
+
+"Potential duplicate transaction detected. Save anyway?"
+
+);
+
+if(!proceed){
+
+return;
+
+}
+
+}
+
+const newRecord={
 
 id:Date.now(),
 
-date,
+...form,
 
-type,
-
-category:label,
-
-amount,
-
-goal:Number(goal||0),
-
-description
+amount:Number(form.amount)
 
 };
 
+setRecords([newRecord,...records]);
 
+setForm({
 
-const updated=[
-
-item,
-...transactions
-
-];
-
-
-setTransactions(
-updated
-);
-
-
-localStorage.setItem(
-
-"finance_diary",
-
-JSON.stringify(
-updated
-)
-
-);
-
-
-setIncome("");
-setExpense("");
-setLoan("");
-setDescription("");
-
-}
-
-
-
-const totalIncome=
-
-transactions
-
-.filter(
-x=>x.type==="Income"
-)
-
-.reduce(
-(a,b)=>a+b.amount,
-0
-);
-
-
-
-const totalExpenses=
-
-transactions
-
-.filter(
-x=>x.type==="Expense"
-)
-
-.reduce(
-(a,b)=>a+b.amount,
-0
-);
-
-
-
-const totalLoan=
-
-transactions
-
-.filter(
-x=>x.type==="Loan"
-)
-
-.reduce(
-(a,b)=>a+b.amount,
-0
-);
-
-
-
-const balance=
-
-totalIncome-
-totalExpenses-
-totalLoan;
-
-
-
-const avgDaily=
-
-transactions.length
-
-?
-
-totalExpenses/
-transactions.length
-
-:0;
-
-
-
-const projected=
-
-Math.round(
-avgDaily*30
-);
-
-
-
-const confidence=
-
-transactions.length>20
-
-?95
-
-:transactions.length>10
-
-?90
-
-:transactions.length>5
-
-?82
-
-:60;
-
-
-
-let trend="";
-
-if(
-transactions.length<3
-){
-
-trend=
-"Learning your spending pattern";
-
-}
-
-else if(
-projected>
-(totalIncome*.7)
-){
-
-trend=
-"Expenses increasing from recent activity";
-
-}
-
-else{
-
-trend=
-"Stable spending pattern";
-
-}
-
-
-
-let recommendation="";
-
-
-if(balance<0){
-
-recommendation=
-"Reduce daily spending by £5";
-
-}
-
-else if(
-
-projected>
-
-(totalIncome*.8)
-
-){
-
-recommendation=
-"Reduce transportation and optional spending";
-
-}
-
-else{
-
-recommendation=
-"Current financial behavior looks sustainable";
-
-}
-
-
-
-const months=
-
-goal && balance>0
-
-?
-
-Math.ceil(
-goal/
-balance
-)
-
-:
-
-"Need more data";
-
-
-
-function exportExcel(){
-
-const rows=[
-
-[
-"Date",
-"Type",
-"Category",
-"Amount",
-"Description"
-]
-
-];
-
-
-transactions.forEach(t=>{
-
-rows.push([
-
-t.date,
-t.type,
-t.category,
-t.amount,
-t.description
-
-]);
+date:"",
+type:"Expense",
+category:"",
+amount:""
 
 });
 
+}
 
-const ws=
-XLSX.utils
-.aoa_to_sheet(rows);
+function deleteTransaction(id){
 
+const confirmDelete=window.confirm(
 
-const wb=
-XLSX.utils
-.book_new();
+"Delete this transaction?"
 
-
-XLSX.utils
-.book_append_sheet(
-wb,
-ws,
-"Diary"
 );
 
+if(!confirmDelete){
 
-XLSX.writeFile(
-wb,
-"AI_Financial_Report.xlsx"
+return;
+
+}
+
+setRecords(
+
+records.filter(item=>item.id!==id)
+
 );
 
 }
 
+const totalIncome=useMemo(()=>{
 
+return records
 
-const input={
+.filter(item=>item.type==="Income")
 
-width:"100%",
-padding:"14px",
-borderRadius:"16px",
-border:"1px solid #D1D5DB",
-marginTop:"10px",
-fontSize:"15px"
+.reduce((a,b)=>a+b.amount,0);
 
-};
+},[records]);
 
+const totalExpenses=useMemo(()=>{
 
+return records
+
+.filter(item=>item.type==="Expense")
+
+.reduce((a,b)=>a+b.amount,0);
+
+},[records]);
+
+const balance=totalIncome-totalExpenses;
+
+const yearlyGoal=10000;
+
+const currentMonth=new Date().getMonth()+1;
+
+const remainingMonths=12-currentMonth || 1;
+
+const averageMonthlyExpenses=
+
+totalExpenses/(currentMonth || 1);
+
+const goalRemaining=
+
+yearlyGoal-balance;
+
+const recommendedSavings=
+
+Math.max(
+
+Math.round(
+
+(goalRemaining/remainingMonths)
++
+(averageMonthlyExpenses*0.10)
+
+),
+
+0
+
+);
+
+const confidence=
+
+records.length>=30
+?88
+:records.length>=15
+?78
+:65;
+
+const monthlyMap={};
+
+records
+
+.filter(item=>item.type==="Expense")
+
+.forEach(item=>{
+
+const month=item.date.slice(0,7);
+
+if(!monthlyMap[month]){
+
+monthlyMap[month]=0;
+
+}
+
+monthlyMap[month]+=item.amount;
+
+});
+
+const expenseTrendData=
+
+Object.keys(monthlyMap).map(key=>({
+
+month:key,
+
+expenses:monthlyMap[key]
+
+}));
+
+const categoryMap={};
+
+records
+
+.filter(item=>item.type==="Expense")
+
+.forEach(item=>{
+
+if(!categoryMap[item.category]){
+
+categoryMap[item.category]=0;
+
+}
+
+categoryMap[item.category]+=item.amount;
+
+});
+
+const pieData=
+
+Object.keys(categoryMap).map(key=>({
+
+name:key,
+
+value:categoryMap[key]
+
+}));
+
+const COLORS=[
+
+"#1e3a8a",
+"#f59e0b",
+"#0f766e",
+"#dc2626",
+"#9333ea"
+
+];
+
+const currentPageRecords=
+
+records.slice(
+
+(page-1)*recordsPerPage,
+
+page*recordsPerPage
+
+);
+
+const totalPages=Math.ceil(
+
+records.length/recordsPerPage
+
+);
 
 return(
 
-<div
-style={{
-background:"#F4F7FB",
-minHeight:"100vh",
-padding:"30px",
-fontFamily:"Arial"
-}}
->
+<div className="min-h-screen bg-slate-100 p-4">
 
-<div
-style={{
-background:"#081326",
-color:"white",
-padding:"40px",
-borderRadius:"25px"
-}}
->
+<div className="max-w-7xl mx-auto">
 
-<h1>
-🤖 AI Saving Companion
+<h1 className="text-3xl font-bold text-blue-900 mb-6">
+
+AI Financial Habit Intelligence Platform
+
 </h1>
 
+<div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+
+<Card
+title="Income"
+value={`£${totalIncome}`}
+color="text-green-600"
+/>
+
+<Card
+title="Expenses"
+value={`£${totalExpenses}`}
+color="text-red-600"
+/>
+
+<Card
+title="Balance"
+value={`£${balance}`}
+color="text-blue-700"
+/>
+
+<Card
+title="Goal"
+value={`£${yearlyGoal}`}
+color="text-amber-600"
+/>
+
+<Card
+title="Confidence"
+value={`${confidence}%`}
+color="text-purple-600"
+/>
+
+</div>
+
+<div className="grid md:grid-cols-2 gap-6 mb-6">
+
+<div className="bg-white rounded-2xl shadow p-5">
+
+<h2 className="text-xl font-bold mb-4">
+
+Monthly Expense Trend
+
+</h2>
+
+<div className="h-72">
+
+<ResponsiveContainer width="100%" height="100%">
+
+<LineChart data={expenseTrendData}>
+
+<CartesianGrid strokeDasharray="3 3"/>
+
+<XAxis dataKey="month"/>
+
+<YAxis/>
+
+<Tooltip/>
+
+<Line
+
+type="monotone"
+
+dataKey="expenses"
+
+stroke="#1e3a8a"
+
+strokeWidth={3}
+
+/>
+
+</LineChart>
+
+</ResponsiveContainer>
+
+</div>
+
+</div>
+
+<div className="bg-white rounded-2xl shadow p-5">
+
+<h2 className="text-xl font-bold mb-4">
+
+Expense Categories
+
+</h2>
+
+<div className="h-72">
+
+<ResponsiveContainer width="100%" height="100%">
+
+<PieChart>
+
+<Pie
+
+data={pieData}
+
+dataKey="value"
+
+nameKey="name"
+
+outerRadius={100}
+
+label
+
+>
+
+{pieData.map((entry,index)=>(
+
+<Cell
+
+key={index}
+
+fill={COLORS[index%COLORS.length]}
+
+/>
+
+))}
+
+</Pie>
+
+<Tooltip/>
+
+</PieChart>
+
+</ResponsiveContainer>
+
+</div>
+
+</div>
+
+</div>
+
+<div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white rounded-2xl shadow p-6 mb-6">
+
+<h2 className="text-2xl font-bold mb-4">
+
+AI Financial Insight
+
+</h2>
+
+<p className="mb-2">
+
+Recommended Monthly Savings:
+£{recommendedSavings}
+
+</p>
+
+<p className="mb-2">
+
+Forecast Confidence:
+{confidence}%
+
+</p>
+
+<p className="mb-2">
+
+Average Monthly Expenses:
+£{Math.round(averageMonthlyExpenses)}
+
+</p>
+
 <p>
-Track • Analyze • Predict • Improve
+
+Based on your financial trend,
+maintaining controlled discretionary spending
+may improve yearly savings achievement.
+
 </p>
 
 </div>
 
+<div className="bg-white rounded-2xl shadow p-5 mb-6">
 
+<h2 className="text-xl font-bold mb-4">
 
-<div
-style={{
-display:"grid",
-gridTemplateColumns:
-"repeat(4,1fr)",
-gap:"20px",
-marginTop:"25px"
-}}
->
+Add Transaction
 
-{[
-
-{
-title:"💼 Income",
-value:`£${totalIncome}`
-},
-
-{
-title:"💸 Expenses",
-value:`£${totalExpenses}`
-},
-
-{
-title:"🏦 Loan",
-value:`£${totalLoan}`
-},
-
-{
-title:"💰 Balance",
-value:`£${balance}`
-}
-
-].map((card,index)=>(
-
-<div
-key={index}
-
-style={{
-background:"white",
-padding:"30px",
-borderRadius:"20px",
-boxShadow:
-"0 4px 12px rgba(0,0,0,.08)"
-}}
->
-
-<h3>
-{card.title}
-</h3>
-
-<h1>
-{card.value}
-</h1>
-
-</div>
-
-))
-
-}
-
-</div>
-
-
-
-
-<div
-style={{
-background:"white",
-padding:"30px",
-borderRadius:"20px",
-marginTop:"30px"
-}}
->
-
-<h2>
-⚡ Daily Transaction Entry
 </h2>
 
-
-<div
-style={{
-display:"grid",
-gridTemplateColumns:
-"repeat(4,1fr)",
-gap:"20px"
-}}
->
-
-
-<div>
-
-<h4>💼 Income</h4>
-
-<input
-placeholder="Income (£)"
-value={income}
-onChange={(e)=>
-setIncome(
-e.target.value
-)}
-style={input}
-/>
-
-<select
-value={incomeType}
-onChange={(e)=>
-setIncomeType(
-e.target.value
-)}
-style={input}
->
-
-<option>Salary</option>
-<option>Project</option>
-<option>Allowance</option>
-
-</select>
-
-</div>
-
-
-
-<div>
-
-<h4>💸 Expenses</h4>
-
-<select
-value={category}
-onChange={(e)=>
-setCategory(
-e.target.value
-)}
-style={input}
->
-
-<option>Transportation</option>
-<option>Food</option>
-<option>Bills</option>
-<option>Shopping</option>
-<option>Conference</option>
-<option>Groceries</option>
-<option>Sponsorship</option>
-<option>LoanPayment</option>
-<option>Others</option>
-</select>
-
-
-<input
-placeholder="Expense (£)"
-value={expense}
-onChange={(e)=>
-setExpense(
-e.target.value
-)}
-style={input}
-/>
-
-</div>
-
-
-
-<div>
-
-<h4>🏦 Loan</h4>
-
-<select
-value={loanType}
-onChange={(e)=>
-setLoanType(
-e.target.value
-)}
-style={input}
->
-
-<option>Student Loan</option>
-<option>Mortgage</option>
-<option>Credit Card</option>
-
-</select>
-
-
-<input
-placeholder="Loan (£)"
-value={loan}
-onChange={(e)=>
-setLoan(
-e.target.value
-)}
-style={input}
-/>
-
-</div>
-
-
-
-<div>
-
-<h4>💰 Goal</h4>
-
-<input
-placeholder="Savings Goal (£)"
-value={goal}
-onChange={(e)=>
-setGoal(
-e.target.value
-)}
-style={input}
-/>
-
-<input
-placeholder="Description"
-value={description}
-onChange={(e)=>
-setDescription(
-e.target.value
-)}
-style={input}
-/>
-
-</div>
-
-</div>
-
-
-<div
-style={{
-display:"flex",
-gap:"20px",
-marginTop:"25px"
-}}
->
+<div className="grid md:grid-cols-4 gap-3">
 
 <input
 type="date"
-value={date}
-onChange={(e)=>
-setDate(
-e.target.value
-)}
-style={{
-...input,
-flex:1
-}}
+name="date"
+value={form.date}
+onChange={handleChange}
+className="border rounded-xl p-3"
 />
 
-<button
-onClick={addTransaction}
-style={{
-background:"#081326",
-color:"white",
-padding:"15px 50px",
-border:"none",
-borderRadius:"20px",
-fontWeight:"bold",
-cursor:"pointer"
-}}
+<select
+name="type"
+value={form.type}
+onChange={handleChange}
+className="border rounded-xl p-3"
 >
 
-+ Add Transaction
+<option>Income</option>
+<option>Expense</option>
+
+</select>
+
+<input
+type="text"
+name="category"
+placeholder="Category"
+value={form.category}
+onChange={handleChange}
+className="border rounded-xl p-3"
+/>
+
+<input
+type="number"
+name="amount"
+placeholder="Amount"
+value={form.amount}
+onChange={handleChange}
+className="border rounded-xl p-3"
+/>
+
+</div>
+
+<button
+
+onClick={addTransaction}
+
+className="mt-4 bg-blue-800 hover:bg-blue-900 text-white px-5 py-3 rounded-xl"
+
+>
+
+Add Transaction
 
 </button>
 
 </div>
 
-</div>
+<div className="bg-white rounded-2xl shadow p-5">
 
+<h2 className="text-xl font-bold mb-4">
 
+Transaction History
 
-
-<div
-style={{
-background:"#081326",
-color:"white",
-padding:"30px",
-marginTop:"30px",
-borderRadius:"25px"
-}}
->
-
-<h2>
-🤖 AI Forecast & Recommendation
 </h2>
 
-<p>
-Trend:
-{trend}
-</p>
+<div className="overflow-auto">
 
-<p>
-Prediction:
-Projected monthly spending £{projected}
-</p>
-
-<p>
-Recommendation:
-{recommendation}
-</p>
-
-<p>
-Savings Goal:
-Estimated completion {months}
-</p>
-
-<p>
-AI Confidence:
-{confidence}%
-</p>
-
-</div>
-
-
-
-
-<div
-style={{
-background:"white",
-padding:"25px",
-marginTop:"30px",
-borderRadius:"20px"
-}}
->
-
-<button
-onClick={exportExcel}
-style={{
-background:"#0F766E",
-color:"white",
-padding:"12px 20px",
-border:"none",
-borderRadius:"10px"
-}}
->
-
-⬇ Download Report
-
-</button>
-
-
-
-<table
-width="100%"
-cellPadding="12"
-style={{
-marginTop:"20px"
-}}
->
+<table className="w-full">
 
 <thead>
 
-<tr>
+<tr className="border-b">
 
-<th>Date</th>
-<th>Type</th>
-<th>Category</th>
-<th>Amount</th>
-<th>Description</th>
+<th className="text-left p-2">Date</th>
+<th className="text-left p-2">Type</th>
+<th className="text-left p-2">Category</th>
+<th className="text-left p-2">Amount</th>
+<th className="text-left p-2">Action</th>
 
 </tr>
 
 </thead>
 
-
 <tbody>
 
-{
+{currentPageRecords.map(item=>(
 
-transactions.length===0
+<tr
+key={item.id}
+className="border-b hover:bg-slate-50"
+>
 
-?
+<td className="p-2">{item.date}</td>
 
-<tr>
+<td className="p-2">{item.type}</td>
 
-<td colSpan="6">
+<td className="p-2">{item.category}</td>
 
-No records available
+<td className="p-2">£{item.amount}</td>
+
+<td className="p-2">
+
+<button
+
+onClick={()=>deleteTransaction(item.id)}
+
+className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg"
+
+>
+
+Delete
+
+</button>
 
 </td>
 
 </tr>
 
-:
-
-transactions.map(t=>(
-
-<tr key={t.id}>
-
-<td>{t.date}</td>
-<td>{t.type}</td>
-<td>{t.category}</td>
-<td>£{t.amount}</td>
-<td>{t.description}</td>
-
-</tr>
-
-))
-
-}
+))}
 
 </tbody>
 
@@ -830,8 +629,75 @@ transactions.map(t=>(
 
 </div>
 
+<div className="flex justify-between mt-5">
+
+<button
+
+disabled={page===1}
+
+onClick={()=>setPage(page-1)}
+
+className="bg-slate-200 px-4 py-2 rounded-xl disabled:opacity-40"
+
+>
+
+Previous
+
+</button>
+
+<p>
+
+Page {page} of {totalPages || 1}
+
+</p>
+
+<button
+
+disabled={page===totalPages || totalPages===0}
+
+onClick={()=>setPage(page+1)}
+
+className="bg-slate-200 px-4 py-2 rounded-xl disabled:opacity-40"
+
+>
+
+Next
+
+</button>
+
 </div>
 
-)
+</div>
+
+</div>
+
+</div>
+
+);
 
 }
+
+function Card({title,value,color}){
+
+return(
+
+<div className="bg-white rounded-2xl shadow p-5">
+
+<h2 className="text-gray-500 text-sm">
+
+{title}
+
+</h2>
+
+<p className={`text-2xl font-bold ${color}`}>
+
+{value}
+
+</p>
+
+</div>
+
+);
+
+}
+```
