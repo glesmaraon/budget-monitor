@@ -1,4 +1,4 @@
-```jsx
+```jsx id="1rf8qk"
 import React, { useState } from "react";
 
 export default function App() {
@@ -34,23 +34,6 @@ export default function App() {
 
     }
 
-    const duplicate = transactions.find(
-      item =>
-        item.date === form.date &&
-        item.category === form.category &&
-        Number(item.amount) === Number(form.amount)
-    );
-
-    if (duplicate) {
-
-      const proceed = window.confirm(
-        "Potential duplicate transaction detected. Continue?"
-      );
-
-      if (!proceed) return;
-
-    }
-
     const newTransaction = {
       id: Date.now(),
       ...form
@@ -67,21 +50,6 @@ export default function App() {
       category: "",
       amount: ""
     });
-
-  }
-
-  function deleteTransaction(id) {
-
-    const confirmDelete =
-      window.confirm("Delete transaction?");
-
-    if (!confirmDelete) return;
-
-    setTransactions(
-      transactions.filter(
-        item => item.id !== id
-      )
-    );
 
   }
 
@@ -160,21 +128,17 @@ export default function App() {
         style={{
           background: "white",
           borderRadius: "16px",
-          padding: "20px",
-          marginBottom: "25px"
+          padding: "20px"
         }}
       >
 
-        <h2 style={{ marginBottom: "15px" }}>
-          Add Transaction
-        </h2>
+        <h2>Add Transaction</h2>
 
         <div
           style={{
             display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit,minmax(180px,1fr))",
-            gap: "10px"
+            gap: "10px",
+            marginTop: "15px"
           }}
         >
 
@@ -212,105 +176,22 @@ export default function App() {
             onChange={handleChange}
           />
 
+          <button
+            onClick={addTransaction}
+            style={{
+              background: "#1e3a8a",
+              color: "white",
+              padding: "10px",
+              border: "none",
+              borderRadius: "10px"
+            }}
+          >
+
+            Add Transaction
+
+          </button>
+
         </div>
-
-        <button
-          onClick={addTransaction}
-          style={{
-            marginTop: "15px",
-            background: "#1e3a8a",
-            color: "white",
-            padding: "10px 20px",
-            border: "none",
-            borderRadius: "10px",
-            cursor: "pointer"
-          }}
-        >
-
-          Add Transaction
-
-        </button>
-
-      </div>
-
-      <div
-        style={{
-          background: "white",
-          borderRadius: "16px",
-          padding: "20px"
-        }}
-      >
-
-        <h2 style={{ marginBottom: "15px" }}>
-          Transaction History
-        </h2>
-
-        <table
-          width="100%"
-          cellPadding="10"
-        >
-
-          <thead>
-
-            <tr
-              style={{
-                background: "#e2e8f0"
-              }}
-            >
-
-              <th>Date</th>
-              <th>Type</th>
-              <th>Category</th>
-              <th>Amount</th>
-              <th>Action</th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {transactions.map(item => (
-
-              <tr key={item.id}>
-
-                <td>{item.date}</td>
-
-                <td>{item.type}</td>
-
-                <td>{item.category}</td>
-
-                <td>£{item.amount}</td>
-
-                <td>
-
-                  <button
-                    onClick={() =>
-                      deleteTransaction(item.id)
-                    }
-                    style={{
-                      background: "#dc2626",
-                      color: "white",
-                      border: "none",
-                      padding: "6px 10px",
-                      borderRadius: "8px",
-                      cursor: "pointer"
-                    }}
-                  >
-
-                    Delete
-
-                  </button>
-
-                </td>
-
-              </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
 
       </div>
 
@@ -336,15 +217,7 @@ function Card({
       }}
     >
 
-      <h3
-        style={{
-          color: "#64748b"
-        }}
-      >
-
-        {title}
-
-      </h3>
+      <h3>{title}</h3>
 
       <p
         style={{
